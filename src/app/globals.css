@@ -24,3 +24,33 @@ body {
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
+
+/* Add to your global CSS */
+.gjs-one-bg {
+  background-color: #ffffff !important;
+}
+
+.gjs-two-color {
+  color: #383838 !important;
+}
+
+.gjs-three-bg {
+  background-color: #f5f5f5 !important;
+}
+
+.gjs-four-color {
+  color: #444444 !important;
+}
+
+.gjs-block {
+  padding: 0 !important;
+  width: 100% !important;
+  min-height: 50px !important;
+}
+
+.gjs-block__media {
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  padding: 8px;
+  margin-bottom: 8px;
+}

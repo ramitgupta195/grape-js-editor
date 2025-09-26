@@ -1,36 +1,191 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
 
-## Getting Started
+# GrapeJS Section Editor
 
-First, run the development server:
+A modern section builder and editor built with GrapeJS and Next.js 14. This tool provides a visual drag-and-drop interface for creating and managing reusable sections with real-time preview capabilities.
+
+## Features
+
+### 🎯 Core Features
+
+- Visual drag-and-drop section builder
+- Real-time preview
+- Section management (Create, Edit, Delete)
+- Responsive design tools
+- Code view for HTML/CSS
+
+### 🧱 Components
+
+- **Layout Components**
+  - Container
+  - Grid systems (2 and 3 columns)
+  - Flex containers (Row and Column)
+- **Basic Elements**
+  - Text blocks
+  - Images
+  - Buttons
+  - Divs
+- **Typography**
+  - Headings
+  - Paragraphs
+  - Lists
+
+### 🎨 Styling
+
+- Visual style editor
+- Typography management
+- Spacing controls
+- Color selection
+- Border customization
+- Background settings
+
+## Quick Start
+
+1. Clone the repository:
+
+```bash
+git clone https://github.com/ramitgupta195/grape-js-editor.git
+```
+
+2. Install dependencies:
+
+```bash
+cd grape-js-editor
+npm install
+```
+
+3. Run the development server:
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+4. Open [http://localhost:3000](http://localhost:3000) in your browser
 
-You can start editing the page by modifying `app/page.js`. The page auto-updates as you edit the file.
+## Project Structure
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```
+grape-js-editor/
+├── src/
+│   ├── app/
+│   │   ├── components/
+│   │   │   └── GrapesEditor.jsx
+│   │   ├── page.js
+│   │   └── globals.css
+│   └── ...
+├── package.json
+└── README.md
+```
 
-## Learn More
+## API Integration
 
-To learn more about Next.js, take a look at the following resources:
+The editor integrates with a RESTful API with the following endpoints:
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+```javascript
+GET /api/v1/sections        // Fetch all sections
+GET /api/v1/sections/:id    // Fetch specific section
+POST /api/v1/sections       // Create new section
+PATCH /api/v1/sections/:id  // Update section
+DELETE /api/v1/sections/:id // Delete section
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Usage
 
-## Deploy on Vercel
+### Basic Implementation
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+```javascript
+import GrapesEditor from "./components/GrapesEditor";
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+export default function Home() {
+  return (
+    <GrapesEditor
+      sectionId={null}
+      apiEndpoint="http://your-api-endpoint/api/v1/sections"
+      onSave={(data) => console.log("Saved:", data)}
+      onApiError={(error) => console.error("Error:", error)}
+    />
+  );
+}
+```
+
+### Component Props
+
+| Prop        | Type           | Description                    |
+| ----------- | -------------- | ------------------------------ |
+| sectionId   | number \| null | ID of section to edit          |
+| apiEndpoint | string         | API endpoint for sections      |
+| onSave      | function       | Callback when section is saved |
+| onApiError  | function       | Callback for API errors        |
+
+## Styling
+
+The project uses Tailwind CSS along with custom CSS variables for consistent theming:
+
+```css
+:root {
+  --background: #ffffff;
+  --foreground: #171717;
+  --border-color: #e5e7eb;
+  --primary: #3b82f6;
+  --primary-hover: #2563eb;
+  --success: #16a34a;
+  --error: #ef4444;
+}
+```
+
+## Development
+
+### Prerequisites
+
+- Node.js 18.x or higher
+- npm or yarn
+- Basic knowledge of React/Next.js
+- Understanding of GrapeJS
+
+### Local Development
+
+1. Start the development server:
+
+```bash
+npm run dev
+```
+
+2. Make your changes
+3. Test thoroughly
+4. Create a pull request
+
+## Contributing
+
+Contributions are welcome! Please feel free to submit a Pull Request.
+
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
+3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
+4. Push to the branch (`git push origin feature/AmazingFeature`)
+5. Open a Pull Request
+
+## Known Issues
+
+- Preview mode might need a refresh in some cases
+- Some style sliders may not be visible properly in dark mode
+
+## Future Improvements
+
+- [x] Add more component templates
+- [ ] Improve dark mode support
+- [x] Add undo/redo functionality
+- [ ] Enhance mobile responsiveness
+- [x] Add more layout components
+
+## License
+
+This project is licensed under the MIT License.
+
+## Acknowledgments
+
+- [GrapeJS](https://grapesjs.com/) for the core editor functionality
+- [Next.js](https://nextjs.org/) for the framework
+- [Tailwind CSS](https://tailwindcss.com/) for styling
+
+---
+
+For more information or issues, please visit [the repository](https://github.com/ramitgupta195/grape-js-editor/issues).

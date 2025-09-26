@@ -3,6 +3,21 @@
 :root {
   --background: #ffffff;
   --foreground: #171717;
+  --border-color: #e5e7eb;
+  --primary: #3b82f6;
+  --primary-hover: #2563eb;
+  --success: #16a34a;
+  --error: #ef4444;
+  --gray-50: #f9fafb;
+  --gray-100: #f3f4f6;
+  --gray-200: #e5e7eb;
+  --gray-300: #d1d5db;
+  --gray-400: #9ca3af;
+  --gray-500: #6b7280;
+  --gray-600: #4b5563;
+  --gray-700: #374151;
+  --gray-800: #1f2937;
+  --gray-900: #111827;
 }
 
 @theme inline {
@@ -16,6 +31,17 @@
   :root {
     --background: #0a0a0a;
     --foreground: #ededed;
+    --border-color: #2d2d2d;
+    --gray-50: #1a1a1a;
+    --gray-100: #1f1f1f;
+    --gray-200: #2d2d2d;
+    --gray-300: #404040;
+    --gray-400: #737373;
+    --gray-500: #999999;
+    --gray-600: #bfbfbf;
+    --gray-700: #d6d6d6;
+    --gray-800: #e6e6e6;
+    --gray-900: #f2f2f2;
   }
 }
 
@@ -25,32 +51,398 @@ body {
   font-family: Arial, Helvetica, sans-serif;
 }
 
-/* Add to your global CSS */
+/* GrapesJS Styles */
 .gjs-one-bg {
-  background-color: #ffffff !important;
+  background-color: var(--background) !important;
 }
 
 .gjs-two-color {
-  color: #383838 !important;
+  color: var(--foreground) !important;
 }
 
 .gjs-three-bg {
-  background-color: #f5f5f5 !important;
+  background-color: var(--gray-50) !important;
 }
 
 .gjs-four-color {
-  color: #444444 !important;
+  color: var(--gray-700) !important;
 }
 
 .gjs-block {
   padding: 0 !important;
   width: 100% !important;
   min-height: 50px !important;
+  background-color: var(--background) !important;
+  border: 1px solid var(--border-color) !important;
+  border-radius: 6px !important;
+  margin-bottom: 8px !important;
+  cursor: pointer !important;
+  transition: all 0.2s !important;
+}
+
+.gjs-block:hover {
+  transform: translateY(-2px) !important;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1) !important;
 }
 
 .gjs-block__media {
-  border: 1px solid #ddd;
+  border: 1px solid var(--border-color);
   border-radius: 4px;
   padding: 8px;
   margin-bottom: 8px;
+}
+
+.gjs-pn-panel {
+  background-color: var(--background) !important;
+  border-color: var(--border-color) !important;
+}
+
+.gjs-pn-buttons {
+  border-color: var(--border-color) !important;
+}
+
+.gjs-pn-btn {
+  color: var(--foreground) !important;
+}
+
+.gjs-pn-btn:hover {
+  color: var(--primary) !important;
+}
+
+.gjs-pn-btn.gjs-pn-active {
+  color: var(--primary) !important;
+}
+
+.gjs-cv-canvas {
+  background-color: var(--gray-50) !important;
+}
+
+.gjs-frame-wrapper {
+  padding: 20px !important;
+}
+
+/* Editor component styles */
+.editor-component {
+  border: 1px dashed var(--gray-400);
+  min-height: 30px;
+  padding: 8px;
+  margin: 4px 0;
+  background-color: var(--background);
+}
+
+.editor-component:empty::before {
+  content: "Empty component";
+  color: var(--gray-400);
+  font-style: italic;
+}
+
+/* Custom button styles */
+.editor-btn {
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-weight: 500;
+  transition: all 0.2s;
+  cursor: pointer;
+}
+
+.editor-btn-primary {
+  background-color: var(--primary);
+  color: white;
+}
+
+.editor-btn-primary:hover {
+  background-color: var(--primary-hover);
+}
+
+.editor-btn-secondary {
+  background-color: var(--gray-200);
+  color: var(--gray-700);
+}
+
+.editor-btn-secondary:hover {
+  background-color: var(--gray-300);
+}
+
+/* Panel styles */
+.editor-panel {
+  background-color: var(--background);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 16px;
+}
+
+.editor-panel-header {
+  border-bottom: 1px solid var(--border-color);
+  padding-bottom: 12px;
+  margin-bottom: 12px;
+}
+
+/* Input styles */
+.editor-input {
+  width: 100%;
+  padding: 8px 12px;
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  background-color: var(--background);
+  color: var(--foreground);
+}
+
+.editor-input:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1);
+}
+
+/* Section list styles */
+.section-list-item {
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  padding: 12px;
+  margin-bottom: 8px;
+  background-color: var(--background);
+  transition: all 0.2s;
+}
+
+.section-list-item:hover {
+  border-color: var(--primary);
+}
+
+.section-list-item.active {
+  border-color: var(--primary);
+  background-color: rgba(59, 130, 246, 0.1);
+}
+
+/* Add after your existing styles - Style Manager specific improvements */
+.gjs-sm-sector {
+  background-color: var(--background) !important;
+  color: var(--foreground) !important;
+}
+
+.gjs-sm-sector-title {
+  background-color: var(--gray-100) !important;
+  color: var(--foreground) !important;
+  border-bottom: 1px solid var(--border-color) !important;
+}
+
+.gjs-sm-properties {
+  background-color: var(--background) !important;
+  padding: 10px !important;
+}
+
+.gjs-sm-label {
+  color: var(--foreground) !important;
+}
+
+/* Field improvements */
+.gjs-field-integer input,
+.gjs-field-number input,
+.gjs-field-slider input,
+.gjs-field select,
+.gjs-field textarea {
+  color: var(--foreground) !important;
+  background-color: var(--background) !important;
+  border: 1px solid var(--border-color) !important;
+  border-radius: 4px !important;
+  padding: 4px 8px !important;
+}
+
+.gjs-field-range input {
+  background-color: var(--primary) !important;
+}
+
+.gjs-field-range input::-webkit-slider-thumb {
+  background-color: var(--primary) !important;
+}
+
+.gjs-field-range input::-moz-range-thumb {
+  background-color: var(--primary) !important;
+}
+
+/* Color picker */
+.gjs-field-color input {
+  color: var(--foreground) !important;
+  background-color: var(--background) !important;
+  border: 1px solid var(--border-color) !important;
+}
+
+.gjs-field-color-picker {
+  background-color: var(--background) !important;
+  border: 1px solid var(--border-color) !important;
+}
+
+/* Layer manager */
+.gjs-layer {
+  background-color: var(--background) !important;
+  color: var(--foreground) !important;
+  border-bottom: 1px solid var(--border-color) !important;
+}
+
+.gjs-layer.gjs-selected {
+  background-color: var(--primary) !important;
+  color: white !important;
+}
+
+.gjs-layer-title {
+  color: var(--foreground) !important;
+}
+
+/* Category */
+.gjs-block-category {
+  background-color: var(--background) !important;
+  color: var(--foreground) !important;
+  border-bottom: 1px solid var(--border-color) !important;
+}
+
+.gjs-title {
+  background-color: var(--gray-100) !important;
+  color: var(--foreground) !important;
+  border-bottom: 1px solid var(--border-color) !important;
+  padding: 8px !important;
+}
+
+/* Component highlighting */
+.gjs-highlighter {
+  outline: 2px solid var(--primary) !important;
+}
+
+.gjs-highlighter-warning {
+  outline: 2px solid var(--error) !important;
+}
+
+/* Toolbar */
+.gjs-toolbar {
+  background-color: var(--background) !important;
+  border: 1px solid var(--border-color) !important;
+}
+
+.gjs-toolbar-item {
+  color: var(--foreground) !important;
+}
+
+.gjs-toolbar-item:hover {
+  background-color: var(--gray-100) !important;
+}
+
+/* Modal */
+.gjs-mdl-dialog {
+  background-color: var(--background) !important;
+  color: var(--foreground) !important;
+  border: 1px solid var(--border-color) !important;
+}
+
+.gjs-mdl-header {
+  background-color: var(--gray-100) !important;
+  border-bottom: 1px solid var(--border-color) !important;
+}
+
+.gjs-mdl-title {
+  color: var(--foreground) !important;
+}
+
+/* Device manager */
+.gjs-devices-c {
+  background-color: var(--background) !important;
+  border-bottom: 1px solid var(--border-color) !important;
+}
+
+.gjs-device-label {
+  color: var(--foreground) !important;
+}
+
+/* RTE (Rich Text Editor) */
+.gjs-rte-toolbar {
+  background-color: var(--background) !important;
+  border: 1px solid var(--border-color) !important;
+}
+
+.gjs-rte-actionbar,
+.gjs-rte-action {
+  color: var(--foreground) !important;
+}
+
+.gjs-rte-action:hover {
+  background-color: var(--gray-100) !important;
+}
+
+/* Selected and hover states */
+.gjs-selected {
+  outline: 2px solid var(--primary) !important;
+}
+
+.gjs-hovered {
+  outline: 1px solid var(--primary) !important;
+}
+
+/* Empty state */
+.gjs-dashed *[data-gjs-type]:empty {
+  min-height: 30px !important;
+  background-color: rgba(127, 127, 127, 0.1) !important;
+}
+
+/* Units and arrows */
+.gjs-field-units {
+  color: var(--foreground) !important;
+  background-color: var(--gray-100) !important;
+}
+
+.gjs-field-arrows {
+  background-color: var(--gray-100) !important;
+}
+
+.gjs-field-arrow {
+  color: var(--foreground) !important;
+}
+
+/* Traits manager */
+.gjs-trt-trait {
+  background-color: var(--background) !important;
+  border-bottom: 1px solid var(--border-color) !important;
+}
+
+.gjs-trt-trait .gjs-label {
+  color: var(--foreground) !important;
+}
+
+/* Asset manager */
+.gjs-am-preview-container {
+  background-color: var(--background) !important;
+}
+
+.gjs-am-asset {
+  background-color: var(--gray-100) !important;
+  border: 1px solid var(--border-color) !important;
+}
+
+.gjs-am-asset.gjs-am-selected {
+  border-color: var(--primary) !important;
+}
+/* Preview mode styles */
+.gjs-preview-mode .gjs-pn-panel {
+  display: none !important;
+}
+
+.gjs-preview-mode .gjs-cv-canvas {
+  width: 100% !important;
+  height: 100% !important;
+}
+
+.gjs-preview-mode .gjs-frame-wrapper {
+  padding: 0 !important;
+}
+
+.gjs-hidden {
+  display: none !important;
+}
+
+/* Improve visibility of components */
+.gjs-dashed *[data-gjs-type="wrapper"] {
+  min-height: 50px !important;
+}
+
+.gjs-dashed *[data-gjs-type="text"] {
+  min-height: 30px !important;
+}
+
+.gjs-dashed *[data-gjs-type="default"] {
+  min-height: 30px !important;
 }

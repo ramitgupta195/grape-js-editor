@@ -12,6 +12,7 @@ import "grapesjs/dist/css/grapes.min.css";
 import prettier from "prettier/standalone";
 import parserHTML from "prettier/parser-html";
 import parserCSS from "prettier/parser-postcss";
+
 // Block Categories and Components
 const BLOCK_CATEGORIES = {
   LAYOUT: "Layout",
@@ -134,6 +135,33 @@ const BLOCK_COMPONENTS = {
   },
 };
 
+// Helper function to merge CSS
+const mergeCss = (existingCss, newCss) => {
+  // Remove duplicate CSS rules
+  const cssRules = {};
+
+  // Parse existing CSS
+  existingCss.split("}").forEach((rule) => {
+    const trimmedRule = rule.trim();
+    if (trimmedRule) {
+      const selector = trimmedRule.split("{")[0].trim();
+      cssRules[selector] = trimmedRule + "}";
+    }
+  });
+
+  // Parse and merge new CSS
+  newCss.split("}").forEach((rule) => {
+    const trimmedRule = rule.trim();
+    if (trimmedRule) {
+      const selector = trimmedRule.split("{")[0].trim();
+      cssRules[selector] = trimmedRule + "}";
+    }
+  });
+
+  // Combine all unique rules
+  return Object.values(cssRules).join("\n");
+};
+
 const GrapesEditor = forwardRef(
   (
     {
@@ -154,6 +182,125 @@ const GrapesEditor = forwardRef(
       html: "",
       css: "",
     });
+
+    // Load sections as blocks function
+    const loadSectionsAsBlocks = async () => {
+      if (!editorInstance.current) return;
+
+      try {
+        const response = await fetch(apiEndpoint);
+        const sections = await response.json();
+
+        const blockManager = editorInstance.current.BlockManager;
+
+        sections.forEach((section) => {
+          // Remove existing block if it exists
+          blockManager.remove(`section-${section.id}`);
+
+          blockManager.add(`section-${section.id}`, {
+            label: section.name,
+            category: "Saved Sections",
+            content: {
+              type: "wrapper",
+              components: section.template_html,
+              attributes: {
+                "data-gjs-type": "section",
+                "data-section-id": section.id,
+                "data-section-css": section.template_css,
+              },
+              style: section.template_css,
+            },
+            selectable: true,
+            draggable: true,
+            render: ({ model, className }) => {
+              return `
+                <div class="${className}" style="position: relative;">
+                  <div style="padding: 8px">
+                    <h4 style="margin: 0 0 4px; font-size: 14px">${section.name}</h4>
+                    <p style="margin: 0; font-size: 12px">Component Key: ${section.component_key}</p>
+                  </div>
+                  ${
+                    section.thumbnail_url
+                      ? `<img src="${section.thumbnail_url}" style="width: 100%; height: 100px; object-fit: cover; border-radius: 4px"/>`
+                      : '<div style="width: 100%; height: 100px; background: #f0f0f0; border-radius: 4px; display: flex; align-items: center; justify-content: center;">No Preview</div>'
+                  }
+                </div>
+              `;
+            },
+          });
+        });
+      } catch (error) {
+        console.error("Error loading sections as blocks:", error);
+      }
+    };
+    // Code beautification function
+    const beautifyCode = (code, type) => {
+      try {
+        if (type === "html") {
+          let indentLevel = 0;
+          const lines = code
+            .replace(/>\s*</g, ">\n<")
+            .split("\n")
+            .map((line) => line.trim())
+            .filter((line) => line);
+
+          return lines
+            .map((line) => {
+              let indent = indentLevel;
+
+              if (line.match(/^<\//)) {
+                indent = Math.max(0, indentLevel - 1);
+              }
+
+              const indentedLine = "  ".repeat(Math.max(0, indent)) + line;
+
+              if (line.match(/^<[^/].*[^/]>$/)) {
+                indentLevel++;
+              }
+              if (line.match(/^<\//)) {
+                indentLevel = Math.max(0, indentLevel - 1);
+              }
+
+              return indentedLine;
+            })
+            .join("\n");
+        } else if (type === "css") {
+          let formatted = code
+            .replace(/\s+/g, " ")
+            .replace(/{\s*/g, " {\n")
+            .replace(/;\s*/g, ";\n")
+            .replace(/}\s*/g, "}\n")
+            .replace(/,\s*/g, ", ")
+            .replace(/>\s*/g, " > ")
+            .replace(/\s*{\s*/g, " {\n")
+            .replace(/\s*}\s*/g, "\n}\n")
+            .replace(/;\s*/g, ";\n")
+            .replace(/\n\s*\n/g, "\n")
+            .trim();
+
+          const lines = formatted.split("\n");
+          let indent = 0;
+
+          return lines
+            .map((line) => {
+              line = line.trim();
+              if (line.includes("}")) {
+                indent = Math.max(0, indent - 1);
+              }
+              const indentedLine = "  ".repeat(Math.max(0, indent)) + line;
+              if (line.includes("{")) {
+                indent++;
+              }
+              return indentedLine;
+            })
+            .join("\n");
+        }
+        return code;
+      } catch (error) {
+        console.error("Beautify error:", error);
+        return code;
+      }
+    };
 
     // Expose editor methods to parent
     useImperativeHandle(ref, () => ({
@@ -187,145 +334,6 @@ const GrapesEditor = forwardRef(
       setIsDirty(true);
     };
 
-    const toggleCodeEditor = () => {
-      if (!isCodeEditorOpen) {
-        updateCodeEditor();
-      }
-      setIsCodeEditorOpen(!isCodeEditorOpen);
-    };
-    const handleSave = () => {
-      if (!editorInstance.current) return;
-
-      const html = editorInstance.current.getHtml();
-      const css = editorInstance.current.getCss();
-      console.log("Saving...", { html, css });
-      if (onSave) {
-        onSave({
-          template_html: html,
-          template_css: css,
-        });
-        setIsDirty(false);
-      }
-    };
-
-    const togglePreview = () => {
-      if (!editorInstance.current) return;
-
-      const editor = editorInstance.current;
-
-      if (!isPreview) {
-        // Enter preview mode
-        editor.stopCommand("sw-visibility");
-        document.body.classList.add("gjs-preview-mode");
-
-        // Hide panels using classes instead of direct style manipulation
-        const panels = document.querySelectorAll(".gjs-pn-panel");
-        panels.forEach((panel) => {
-          if (panel.classList.contains("gjs-pn-commands")) return;
-          panel.classList.add("gjs-hidden");
-        });
-
-        // Update editor state
-        editor.refresh();
-        setIsPreview(true);
-      } else {
-        // Exit preview mode
-        editor.runCommand("sw-visibility");
-        document.body.classList.remove("gjs-preview-mode");
-
-        // Show panels
-        const panels = document.querySelectorAll(".gjs-pn-panel");
-        panels.forEach((panel) => {
-          panel.classList.remove("gjs-hidden");
-        });
-
-        // Update editor state
-        editor.refresh();
-        setIsPreview(false);
-      }
-    };
-
-    // beautify code
-    const beautifyCode = (code, type) => {
-      if (type === "html") {
-        try {
-          // Improved HTML formatting
-          let indentLevel = 0;
-          const lines = code
-            .replace(/>\s*</g, ">\n<") // Add newline between tags
-            .split("\n")
-            .map((line) => line.trim())
-            .filter((line) => line); // Remove empty lines
-
-          return lines
-            .map((line) => {
-              let indent = indentLevel;
-
-              // Decrease indent for closing tags
-              if (line.match(/^<\//)) {
-                indent = Math.max(0, indentLevel - 1);
-              }
-
-              // Add proper indentation
-              const indentedLine = "  ".repeat(Math.max(0, indent)) + line;
-
-              // Increase indent for opening tags
-              if (line.match(/^<[^/].*[^/]>$/)) {
-                indentLevel++;
-              }
-              // Decrease indent for closing tags
-              if (line.match(/^<\//)) {
-                indentLevel = Math.max(0, indentLevel - 1);
-              }
-
-              return indentedLine;
-            })
-            .join("\n");
-        } catch (error) {
-          console.error("HTML formatting error:", error);
-          return code; // Return original code if formatting fails
-        }
-      } else if (type === "css") {
-        try {
-          // Improved CSS formatting
-          let formatted = code
-            .replace(/\s+/g, " ") // Normalize whitespace
-            .replace(/{\s*/g, " {\n") // Format opening braces
-            .replace(/;\s*/g, ";\n") // Format semicolons
-            .replace(/}\s*/g, "}\n") // Format closing braces
-            .replace(/,\s*/g, ", ") // Format commas
-            .replace(/>\s*/g, " > ") // Format child selectors
-            .replace(/\s*{\s*/g, " {\n") // Clean up before brackets
-            .replace(/\s*}\s*/g, "\n}\n") // Clean up after brackets
-            .replace(/;\s*/g, ";\n") // Clean up after semicolons
-            .replace(/\n\s*\n/g, "\n") // Remove empty lines
-            .trim();
-
-          // Add indentation
-          const lines = formatted.split("\n");
-          let indent = 0;
-
-          return lines
-            .map((line) => {
-              line = line.trim();
-              if (line.includes("}")) {
-                indent = Math.max(0, indent - 1);
-              }
-              const indentedLine = "  ".repeat(Math.max(0, indent)) + line;
-              if (line.includes("{")) {
-                indent++;
-              }
-              return indentedLine;
-            })
-            .join("\n");
-        } catch (error) {
-          console.error("CSS formatting error:", error);
-          return code; // Return original code if formatting fails
-        }
-      }
-      return code;
-    };
-
     const handleBeautifyCode = () => {
       try {
         const currentCode = codeEditorContent[activeTab];
@@ -333,7 +341,6 @@ const GrapesEditor = forwardRef(
         handleCodeChange(activeTab, beautifiedCode);
       } catch (error) {
         console.error("Beautification error:", error);
-        // Optionally show an error message to the user
       }
     };
 
@@ -342,7 +349,6 @@ const GrapesEditor = forwardRef(
       navigator.clipboard
         .writeText(currentCode)
         .then(() => {
-          // You could add a toast notification here
           console.log("Code copied to clipboard");
         })
         .catch((err) => console.error("Failed to copy code:", err));
@@ -359,6 +365,67 @@ const GrapesEditor = forwardRef(
       a.click();
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
+    };
+
+    const toggleCodeEditor = () => {
+      if (!isCodeEditorOpen) {
+        updateCodeEditor();
+      }
+      setIsCodeEditorOpen(!isCodeEditorOpen);
+    };
+    const handleSave = () => {
+      if (!editorInstance.current) return;
+
+      const html = editorInstance.current.getHtml();
+      const css = editorInstance.current.getCss({
+        keepUnusedStyles: true,
+      });
+
+      console.log("Saving...", { html, css });
+      if (onSave) {
+        onSave({
+          template_html: html,
+          template_css: css,
+        })
+          .then(() => {
+            setIsDirty(false);
+            loadSectionsAsBlocks();
+          })
+          .catch((error) => {
+            console.error("Error saving:", error);
+          });
+      }
+    };
+
+    const togglePreview = () => {
+      if (!editorInstance.current) return;
+
+      const editor = editorInstance.current;
+
+      if (!isPreview) {
+        editor.stopCommand("sw-visibility");
+        document.body.classList.add("gjs-preview-mode");
+
+        const panels = document.querySelectorAll(".gjs-pn-panel");
+        panels.forEach((panel) => {
+          if (panel.classList.contains("gjs-pn-commands")) return;
+          panel.classList.add("gjs-hidden");
+        });
+
+        editor.refresh();
+        setIsPreview(true);
+      } else {
+        editor.runCommand("sw-visibility");
+        document.body.classList.remove("gjs-preview-mode");
+
+        const panels = document.querySelectorAll(".gjs-pn-panel");
+        panels.forEach((panel) => {
+          panel.classList.remove("gjs-hidden");
+        });
+
+        editor.refresh();
+        setIsPreview(false);
+      }
     };
 
     // Initialize editor
@@ -446,9 +513,9 @@ const GrapesEditor = forwardRef(
                 },
                 attributes: { class: "gjs-block-button" },
               },
-              // Add all new blocks
               ...Object.values(BLOCK_COMPONENTS),
             ],
+            categories: [{ id: "Saved Sections", label: "Saved Sections" }],
           },
           styleManager: {
             appendTo: "#styles",
@@ -517,6 +584,7 @@ const GrapesEditor = forwardRef(
                 buildProps: ["transition", "transform"],
               },
             ],
+            multipleStyles: true,
           },
           layerManager: {
             appendTo: "#layers",
@@ -557,32 +625,28 @@ const GrapesEditor = forwardRef(
             styles: [
               "https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css",
             ],
+            frameStyle: `
+              body { 
+                margin: 0;
+                padding: 20px;
+                box-sizing: border-box;
+                min-height: 100vh;
+              }
+            `,
           },
-          // Add traits
-          traits: {
-            types: [
-              {
-                type: "class_select",
-                name: "align",
-                label: "Align",
-                options: [
-                  { value: "left", name: "Left" },
-                  { value: "center", name: "Center" },
-                  { value: "right", name: "Right" },
-                ],
-              },
-              {
-                type: "class_select",
-                name: "spacing",
-                label: "Spacing",
-                options: [
-                  { value: "p-0", name: "None" },
-                  { value: "p-4", name: "Small" },
-                  { value: "p-8", name: "Medium" },
-                  { value: "p-12", name: "Large" },
-                ],
-              },
-            ],
+          dragMode: "translate",
+          components: {
+            wrapper: {
+              removable: false,
+              draggable: false,
+              droppable: true,
+              components: [],
+            },
+          },
+          parser: {
+            cssParser: {
+              keepUnusedStyles: true,
+            },
           },
         });
 
@@ -610,16 +674,35 @@ const GrapesEditor = forwardRef(
           },
         });
 
+        // Event Listeners
+        editor.on("component:selected", (component) => {
+          console.log("Selected component:", component);
+        });
+
+        editor.on("component:add", (component) => {
+          const sectionCss = component.get("attributes")["data-section-css"];
+          if (sectionCss) {
+            const currentCss = editor.getCss();
+            const mergedCss = mergeCss(currentCss, sectionCss);
+            editor.setStyle(mergedCss);
+          }
+          editor.refresh();
+        });
+
+        editor.on("component:mount", (component) => {
+          console.log("Mounted component:", component);
+        });
+
         // Track changes
         editor.on("component:update", () => {
           setIsDirty(true);
           updateCodeEditor();
         });
+
         editor.on("style:update", () => {
           setIsDirty(true);
           updateCodeEditor();
         });
-
         // Add commands
         editor.Commands.add("preview", {
           run: togglePreview,
@@ -634,6 +717,22 @@ const GrapesEditor = forwardRef(
           },
         });
 
+        editor.on("block:drag:stop", function (component) {
+          if (component && component.get("content")) {
+            setIsDirty(true);
+            const sectionCss = component.get("attributes")["data-section-css"];
+            if (sectionCss) {
+              const currentCss = editor.getCss();
+              const mergedCss = mergeCss(currentCss, sectionCss);
+              editor.setStyle(mergedCss);
+            }
+            editor.refresh();
+          }
+        });
+
+        // Load sections as blocks
+        loadSectionsAsBlocks();
+
         editorInstance.current = editor;
       }
 
@@ -644,6 +743,7 @@ const GrapesEditor = forwardRef(
         }
       };
     }, []);
+
     // Load section data
     useEffect(() => {
       const loadSectionData = async () => {
@@ -691,9 +791,7 @@ const GrapesEditor = forwardRef(
             </select>
             <button
               onClick={togglePreview}
-              className={`editor-btn ${
-                isPreview ? "editor-btn-primary" : "editor-btn-secondary"
-              }`}
+              className={`editor-btn ${isPreview ? "editor-btn-primary" : "editor-btn-secondary"}`}
             >
               {isPreview ? "Exit Preview" : "Preview"}
             </button>
@@ -707,19 +805,21 @@ const GrapesEditor = forwardRef(
             </button>
             <button
               onClick={toggleCodeEditor}
-              className={`editor-btn ${
-                isCodeEditorOpen ? "editor-btn-primary" : "editor-btn-secondary"
-              }`}
+              className={`editor-btn ${isCodeEditorOpen ? "editor-btn-primary" : "editor-btn-secondary"}`}
             >
               Code
+            </button>
+            <button
+              onClick={loadSectionsAsBlocks}
+              className="editor-btn editor-btn-secondary"
+            >
+              Refresh Sections
             </button>
           </div>
           <button
             onClick={handleSave}
             disabled={!isDirty}
-            className={`editor-btn ${
-              isDirty ? "editor-btn-primary" : "editor-btn-secondary"
-            }`}
+            className={`editor-btn ${isDirty ? "editor-btn-primary" : "editor-btn-secondary"}`}
           >
             {isDirty ? "Save Changes" : "Saved"}
           </button>
@@ -733,12 +833,9 @@ const GrapesEditor = forwardRef(
               <div className="bg-white p-4 rounded-lg">Loading...</div>
             </div>
           )}
-
           {/* Left Sidebar */}
           <div
-            className={`w-64 bg-background border-r border-border flex flex-col ${
-              isPreview ? "hidden" : ""
-            }`}
+            className={`w-64 bg-background border-r border-border flex flex-col ${isPreview ? "hidden" : ""}`}
           >
             <div className="p-4 border-b border-border">
               <h2 className="font-semibold text-lg">Blocks</h2>
@@ -759,9 +856,7 @@ const GrapesEditor = forwardRef(
 
           {/* Right Sidebar */}
           <div
-            className={`w-64 bg-background border-l border-border ${
-              isPreview ? "hidden" : ""
-            }`}
+            className={`w-64 bg-background border-l border-border ${isPreview ? "hidden" : ""}`}
           >
             <div className="p-4 border-b border-border">
               <h2 className="font-semibold text-lg">Styles</h2>
@@ -771,10 +866,9 @@ const GrapesEditor = forwardRef(
         </div>
 
         {/* Code Editor Panel */}
-        {/* Code Editor Panel */}
         <div className={`code-panel ${isCodeEditorOpen ? "" : "hidden"}`}>
           <div className="code-panel-header">
-            <div className="flex items-center space-x-2">
+            <div>
               <button
                 className={`code-panel-tab ${activeTab === "html" ? "active" : ""}`}
                 onClick={() => setActiveTab("html")}
@@ -794,41 +888,51 @@ const GrapesEditor = forwardRef(
                 className="editor-btn editor-btn-secondary text-sm"
                 title="Beautify Code"
               >
-                <span className="material-icons">format_align_left</span>
+                Format
               </button>
               <button
                 onClick={handleCopyCode}
                 className="editor-btn editor-btn-secondary text-sm"
                 title="Copy Code"
               >
-                <span className="material-icons">content_copy</span>
+                Copy
               </button>
               <button
                 onClick={handleDownloadCode}
                 className="editor-btn editor-btn-secondary text-sm"
                 title="Download Code"
               >
-                <span className="material-icons">download</span>
+                Download
               </button>
               <button
                 onClick={toggleCodeEditor}
                 className="editor-btn editor-btn-secondary text-sm"
                 title="Close"
               >
-                <span className="material-icons">close</span>
+                Close
               </button>
             </div>
           </div>
           <div className="code-panel-content">
             <div className="code-panel-editor">
-              <textarea
-                value={codeEditorContent[activeTab]}
-                onChange={(e) => handleCodeChange(activeTab, e.target.value)}
-                placeholder={`Enter your ${activeTab.toUpperCase()} code here...`}
-                className="code-editor-textarea"
-                spellCheck="false"
-                wrap="off"
-              />
+              {activeTab === "html" && (
+                <textarea
+                  value={codeEditorContent.html}
+                  onChange={(e) => handleCodeChange("html", e.target.value)}
+                  placeholder="HTML code..."
+                  spellCheck="false"
+                  wrap="off"
+                />
+              )}
+              {activeTab === "css" && (
+                <textarea
+                  value={codeEditorContent.css}
+                  onChange={(e) => handleCodeChange("css", e.target.value)}
+                  placeholder="CSS code..."
+                  spellCheck="false"
+                  wrap="off"
+                />
+              )}
             </div>
           </div>
         </div>

@@ -9,7 +9,9 @@ import {
 } from "react";
 import grapesjs from "grapesjs";
 import "grapesjs/dist/css/grapes.min.css";
-
+import prettier from "prettier/standalone";
+import parserHTML from "prettier/parser-html";
+import parserCSS from "prettier/parser-postcss";
 // Block Categories and Components
 const BLOCK_CATEGORIES = {
   LAYOUT: "Layout",
@@ -78,7 +80,6 @@ const BLOCK_COMPONENTS = {
       </div>
     `,
   },
-
   // Typography
   HEADING: {
     id: "heading",
@@ -147,6 +148,12 @@ const GrapesEditor = forwardRef(
     const [loading, setLoading] = useState(false);
     const [isDirty, setIsDirty] = useState(false);
     const [isPreview, setIsPreview] = useState(false);
+    const [isCodeEditorOpen, setIsCodeEditorOpen] = useState(false);
+    const [activeTab, setActiveTab] = useState("html");
+    const [codeEditorContent, setCodeEditorContent] = useState({
+      html: "",
+      css: "",
+    });
 
     // Expose editor methods to parent
     useImperativeHandle(ref, () => ({
@@ -157,6 +164,35 @@ const GrapesEditor = forwardRef(
       editor: editorInstance.current,
     }));
 
+    const updateCodeEditor = () => {
+      if (!editorInstance.current) return;
+
+      setCodeEditorContent({
+        html: editorInstance.current.getHtml(),
+        css: editorInstance.current.getCss(),
+      });
+    };
+
+    const handleCodeChange = (type, value) => {
+      setCodeEditorContent((prev) => ({
+        ...prev,
+        [type]: value,
+      }));
+
+      if (type === "html") {
+        editorInstance.current?.setComponents(value);
+      } else if (type === "css") {
+        editorInstance.current?.setStyle(value);
+      }
+      setIsDirty(true);
+    };
+
+    const toggleCodeEditor = () => {
+      if (!isCodeEditorOpen) {
+        updateCodeEditor();
+      }
+      setIsCodeEditorOpen(!isCodeEditorOpen);
+    };
     const handleSave = () => {
       if (!editorInstance.current) return;
 
@@ -172,7 +208,6 @@ const GrapesEditor = forwardRef(
       }
     };
 
-    // Fixed preview handler
     const togglePreview = () => {
       if (!editorInstance.current) return;
 
@@ -209,6 +244,123 @@ const GrapesEditor = forwardRef(
         setIsPreview(false);
       }
     };
+
+    // beautify code
+    const beautifyCode = (code, type) => {
+      if (type === "html") {
+        try {
+          // Improved HTML formatting
+          let indentLevel = 0;
+          const lines = code
+            .replace(/>\s*</g, ">\n<") // Add newline between tags
+            .split("\n")
+            .map((line) => line.trim())
+            .filter((line) => line); // Remove empty lines
+
+          return lines
+            .map((line) => {
+              let indent = indentLevel;
+
+              // Decrease indent for closing tags
+              if (line.match(/^<\//)) {
+                indent = Math.max(0, indentLevel - 1);
+              }
+
+              // Add proper indentation
+              const indentedLine = "  ".repeat(Math.max(0, indent)) + line;
+
+              // Increase indent for opening tags
+              if (line.match(/^<[^/].*[^/]>$/)) {
+                indentLevel++;
+              }
+              // Decrease indent for closing tags
+              if (line.match(/^<\//)) {
+                indentLevel = Math.max(0, indentLevel - 1);
+              }
+
+              return indentedLine;
+            })
+            .join("\n");
+        } catch (error) {
+          console.error("HTML formatting error:", error);
+          return code; // Return original code if formatting fails
+        }
+      } else if (type === "css") {
+        try {
+          // Improved CSS formatting
+          let formatted = code
+            .replace(/\s+/g, " ") // Normalize whitespace
+            .replace(/{\s*/g, " {\n") // Format opening braces
+            .replace(/;\s*/g, ";\n") // Format semicolons
+            .replace(/}\s*/g, "}\n") // Format closing braces
+            .replace(/,\s*/g, ", ") // Format commas
+            .replace(/>\s*/g, " > ") // Format child selectors
+            .replace(/\s*{\s*/g, " {\n") // Clean up before brackets
+            .replace(/\s*}\s*/g, "\n}\n") // Clean up after brackets
+            .replace(/;\s*/g, ";\n") // Clean up after semicolons
+            .replace(/\n\s*\n/g, "\n") // Remove empty lines
+            .trim();
+
+          // Add indentation
+          const lines = formatted.split("\n");
+          let indent = 0;
+
+          return lines
+            .map((line) => {
+              line = line.trim();
+              if (line.includes("}")) {
+                indent = Math.max(0, indent - 1);
+              }
+              const indentedLine = "  ".repeat(Math.max(0, indent)) + line;
+              if (line.includes("{")) {
+                indent++;
+              }
+              return indentedLine;
+            })
+            .join("\n");
+        } catch (error) {
+          console.error("CSS formatting error:", error);
+          return code; // Return original code if formatting fails
+        }
+      }
+      return code;
+    };
+
+    const handleBeautifyCode = () => {
+      try {
+        const currentCode = codeEditorContent[activeTab];
+        const beautifiedCode = beautifyCode(currentCode, activeTab);
+        handleCodeChange(activeTab, beautifiedCode);
+      } catch (error) {
+        console.error("Beautification error:", error);
+        // Optionally show an error message to the user
+      }
+    };
+
+    const handleCopyCode = () => {
+      const currentCode = codeEditorContent[activeTab];
+      navigator.clipboard
+        .writeText(currentCode)
+        .then(() => {
+          // You could add a toast notification here
+          console.log("Code copied to clipboard");
+        })
+        .catch((err) => console.error("Failed to copy code:", err));
+    };
+
+    const handleDownloadCode = () => {
+      const currentCode = codeEditorContent[activeTab];
+      const blob = new Blob([currentCode], { type: "text/plain" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `code.${activeTab}`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    };
+
     // Initialize editor
     useEffect(() => {
       if (!editorInstance.current) {
@@ -369,6 +521,43 @@ const GrapesEditor = forwardRef(
           layerManager: {
             appendTo: "#layers",
           },
+          panels: {
+            defaults: [
+              {
+                id: "basic-actions",
+                el: ".panel__basic-actions",
+                buttons: [
+                  {
+                    id: "visibility",
+                    active: true,
+                    className: "btn-toggle-borders",
+                    label: "Borders",
+                    command: "sw-visibility",
+                  },
+                  {
+                    id: "preview",
+                    className: "btn-preview",
+                    label: "Preview",
+                    command: "preview",
+                  },
+                  {
+                    id: "code",
+                    className: "btn-code",
+                    label: "Code",
+                    command: {
+                      run: toggleCodeEditor,
+                      stop: toggleCodeEditor,
+                    },
+                  },
+                ],
+              },
+            ],
+          },
+          canvas: {
+            styles: [
+              "https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css",
+            ],
+          },
           // Add traits
           traits: {
             types: [
@@ -393,34 +582,6 @@ const GrapesEditor = forwardRef(
                   { value: "p-12", name: "Large" },
                 ],
               },
-            ],
-          },
-          panels: {
-            defaults: [
-              {
-                id: "basic-actions",
-                el: ".panel__basic-actions",
-                buttons: [
-                  {
-                    id: "visibility",
-                    active: true,
-                    className: "btn-toggle-borders",
-                    label: "Borders",
-                    command: "sw-visibility",
-                  },
-                  {
-                    id: "preview",
-                    className: "btn-preview",
-                    label: "Preview",
-                    command: "preview",
-                  },
-                ],
-              },
-            ],
-          },
-          canvas: {
-            styles: [
-              "https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css",
             ],
           },
         });
@@ -450,8 +611,14 @@ const GrapesEditor = forwardRef(
         });
 
         // Track changes
-        editor.on("component:update", () => setIsDirty(true));
-        editor.on("style:update", () => setIsDirty(true));
+        editor.on("component:update", () => {
+          setIsDirty(true);
+          updateCodeEditor();
+        });
+        editor.on("style:update", () => {
+          setIsDirty(true);
+          updateCodeEditor();
+        });
 
         // Add commands
         editor.Commands.add("preview", {
@@ -477,7 +644,6 @@ const GrapesEditor = forwardRef(
         }
       };
     }, []);
-
     // Load section data
     useEffect(() => {
       const loadSectionData = async () => {
@@ -539,6 +705,14 @@ const GrapesEditor = forwardRef(
             >
               Borders
             </button>
+            <button
+              onClick={toggleCodeEditor}
+              className={`editor-btn ${
+                isCodeEditorOpen ? "editor-btn-primary" : "editor-btn-secondary"
+              }`}
+            >
+              Code
+            </button>
           </div>
           <button
             onClick={handleSave}
@@ -593,6 +767,69 @@ const GrapesEditor = forwardRef(
               <h2 className="font-semibold text-lg">Styles</h2>
             </div>
             <div className="overflow-y-auto h-full" id="styles" />
+          </div>
+        </div>
+
+        {/* Code Editor Panel */}
+        {/* Code Editor Panel */}
+        <div className={`code-panel ${isCodeEditorOpen ? "" : "hidden"}`}>
+          <div className="code-panel-header">
+            <div className="flex items-center space-x-2">
+              <button
+                className={`code-panel-tab ${activeTab === "html" ? "active" : ""}`}
+                onClick={() => setActiveTab("html")}
+              >
+                HTML
+              </button>
+              <button
+                className={`code-panel-tab ${activeTab === "css" ? "active" : ""}`}
+                onClick={() => setActiveTab("css")}
+              >
+                CSS
+              </button>
+            </div>
+            <div className="flex items-center space-x-2">
+              <button
+                onClick={handleBeautifyCode}
+                className="editor-btn editor-btn-secondary text-sm"
+                title="Beautify Code"
+              >
+                <span className="material-icons">format_align_left</span>
+              </button>
+              <button
+                onClick={handleCopyCode}
+                className="editor-btn editor-btn-secondary text-sm"
+                title="Copy Code"
+              >
+                <span className="material-icons">content_copy</span>
+              </button>
+              <button
+                onClick={handleDownloadCode}
+                className="editor-btn editor-btn-secondary text-sm"
+                title="Download Code"
+              >
+                <span className="material-icons">download</span>
+              </button>
+              <button
+                onClick={toggleCodeEditor}
+                className="editor-btn editor-btn-secondary text-sm"
+                title="Close"
+              >
+                <span className="material-icons">close</span>
+              </button>
+            </div>
+          </div>
+          <div className="code-panel-content">
+            <div className="code-panel-editor">
+              <textarea
+                value={codeEditorContent[activeTab]}
+                onChange={(e) => handleCodeChange(activeTab, e.target.value)}
+                placeholder={`Enter your ${activeTab.toUpperCase()} code here...`}
+                className="code-editor-textarea"
+                spellCheck="false"
+                wrap="off"
+              />
+            </div>
           </div>
         </div>
       </div>

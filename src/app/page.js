@@ -13,7 +13,7 @@ export default function Home() {
   const [componentKey, setComponentKey] = useState("");
   const [thumbnailUrl, setThumbnailUrl] = useState("");
   const [sectionId, setSectionId] = useState(null);
-  const [apiEndpoint] = useState("http://127.0.0.1:3000/api/v1/sections");
+  const [apiEndpoint] = useState("http://10.80.5.76:3000/api/v1/sections");
   const [saving, setSaving] = useState(false);
   const [allSections, setAllSections] = useState([]);
   const [loadingAllSections, setLoadingAllSections] = useState(false);

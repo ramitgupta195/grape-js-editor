@@ -1,11 +1,18 @@
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
-
+import { Inter } from "next/font/google";
 const geistSans = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],
 });
-
+const materialIcons = () => {
+  return (
+    <link
+      href="https://fonts.googleapis.com/icon?family=Material+Icons"
+      rel="stylesheet"
+    />
+  );
+};
 const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
   subsets: ["latin"],
@@ -19,6 +26,7 @@ export const metadata = {
 export default function RootLayout({ children }) {
   return (
     <html lang="en">
+      <head>{materialIcons()}</head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >

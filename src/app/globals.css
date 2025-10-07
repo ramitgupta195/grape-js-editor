@@ -1,19 +1,30 @@
 @import "tailwindcss";
-/* Add if you're using material icons */
-/* @import url("https://fonts.googleapis.com/icon?family=Material+Icons"); */
-
-/* Add if you want to use Fira Code font */
-/* @import url("https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500&display=swap"); */
 
 :root {
+  /* Light, modern color scheme */
   --background: #ffffff;
-  --foreground: #171717;
-  --border-color: #e5e7eb;
+  --background-secondary: #fafbfc;
+  --foreground: #1e293b;
+  --foreground-muted: #64748b;
+
+  --border-color: #e2e8f0;
+  --border-color-hover: #cbd5e1;
+
   --primary: #3b82f6;
   --primary-hover: #2563eb;
-  --success: #16a34a;
+  --primary-light: #eff6ff;
+
+  --success: #10b981;
+  --success-light: #d1fae5;
+
   --error: #ef4444;
-  --gray-50: #f9fafb;
+  --error-light: #fee2e2;
+
+  --warning: #f59e0b;
+  --warning-light: #fef3c7;
+
+  /* Gray scale - very light */
+  --gray-50: #fafbfc;
   --gray-100: #f3f4f6;
   --gray-200: #e5e7eb;
   --gray-300: #d1d5db;
@@ -22,7 +33,22 @@
   --gray-600: #4b5563;
   --gray-700: #374151;
   --gray-800: #1f2937;
-  --gray-900: #111827;
+  --gray-900: #0f172a;
+
+  /* Shadows for depth */
+  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  --shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+  --shadow-lg:
+    0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+  --shadow-xl:
+    0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+
+  /* Border radius */
+  --radius-sm: 0.375rem;
+  --radius: 0.5rem;
+  --radius-md: 0.75rem;
+  --radius-lg: 1rem;
 }
 
 @theme inline {
@@ -32,33 +58,24 @@
   --font-mono: var(--font-geist-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-    --border-color: #2d2d2d;
-    --gray-50: #1a1a1a;
-    --gray-100: #1f1f1f;
-    --gray-200: #2d2d2d;
-    --gray-300: #404040;
-    --gray-400: #737373;
-    --gray-500: #999999;
-    --gray-600: #bfbfbf;
-    --gray-700: #d6d6d6;
-    --gray-800: #e6e6e6;
-    --gray-900: #f2f2f2;
-  }
-}
-
 body {
-  background: var(--background);
+  background: #ffffff;
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family:
+    -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue",
+    Arial, sans-serif;
+  font-size: 14px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
-/* GrapesJS Styles */
+/* ========================================
+   GrapesJS Core Overrides
+   ======================================== */
+
 .gjs-one-bg {
-  background-color: var(--background) !important;
+  background-color: #ffffff !important;
 }
 
 .gjs-two-color {
@@ -66,39 +83,96 @@ body {
 }
 
 .gjs-three-bg {
-  background-color: var(--gray-50) !important;
+  background-color: #fafbfc !important;
 }
 
 .gjs-four-color {
-  color: var(--gray-700) !important;
+  color: var(--foreground-muted) !important;
 }
 
-.gjs-block {
-  padding: 0 !important;
-  width: 100% !important;
-  min-height: 50px !important;
-  background-color: var(--background) !important;
+/* ========================================
+   Canvas - BRIGHT AND LIGHT
+   ======================================== */
+
+#gjs {
+  background-color: #f5f7fa !important;
+}
+
+.gjs-cv-canvas {
+  background-color: #ffffff !important;
+  background-image: none !important;
+}
+
+.gjs-frame-wrapper {
+  padding: 20px !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  background: transparent !important;
+}
+
+.gjs-frame {
+  background: #ffffff !important;
   border: 1px solid var(--border-color) !important;
-  border-radius: 6px !important;
-  margin-bottom: 8px !important;
+  border-radius: var(--radius) !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08) !important;
+}
+
+/* ========================================
+   Block Manager Styling
+   ======================================== */
+
+.gjs-block {
+  padding: 12px !important;
+  width: 100% !important;
+  min-height: 60px !important;
+  background-color: #ffffff !important;
+  border: 1.5px solid var(--border-color) !important;
+  border-radius: var(--radius) !important;
+  margin-bottom: 10px !important;
   cursor: pointer !important;
-  transition: all 0.2s !important;
+  transition: all 0.2s ease !important;
+  box-shadow: var(--shadow-sm) !important;
 }
 
 .gjs-block:hover {
   transform: translateY(-2px) !important;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1) !important;
+  box-shadow: var(--shadow-md) !important;
+  border-color: var(--primary) !important;
 }
 
 .gjs-block__media {
   border: 1px solid var(--border-color);
-  border-radius: 4px;
-  padding: 8px;
+  border-radius: var(--radius-sm);
+  padding: 10px;
   margin-bottom: 8px;
+  background: var(--gray-50);
 }
 
+/* Block Category */
+.gjs-block-category {
+  background-color: #ffffff !important;
+  color: var(--foreground) !important;
+  border-bottom: 1px solid var(--border-color) !important;
+  margin-bottom: 12px !important;
+}
+
+.gjs-title {
+  background-color: var(--gray-50) !important;
+  color: var(--foreground) !important;
+  border-bottom: 1px solid var(--border-color) !important;
+  padding: 12px 16px !important;
+  font-weight: 600 !important;
+  font-size: 13px !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.5px !important;
+}
+
+/* ========================================
+   Panels
+   ======================================== */
+
 .gjs-pn-panel {
-  background-color: var(--background) !important;
+  background-color: #ffffff !important;
   border-color: var(--border-color) !important;
 }
 
@@ -108,46 +182,363 @@ body {
 
 .gjs-pn-btn {
   color: var(--foreground) !important;
+  padding: 8px 12px !important;
+  transition: all 0.2s !important;
 }
 
 .gjs-pn-btn:hover {
+  background-color: var(--primary-light) !important;
   color: var(--primary) !important;
 }
 
 .gjs-pn-btn.gjs-pn-active {
-  color: var(--primary) !important;
+  background-color: var(--primary) !important;
+  color: white !important;
 }
 
-.gjs-cv-canvas {
+/* ========================================
+   Style Manager
+   ======================================== */
+
+.gjs-sm-sector {
+  background-color: #ffffff !important;
+  color: var(--foreground) !important;
+  border-bottom: 1px solid var(--border-color) !important;
+}
+
+.gjs-sm-sector-title {
+  background-color: var(--gray-50) !important;
+  color: var(--foreground) !important;
+  border-bottom: 1px solid var(--border-color) !important;
+  padding: 12px 16px !important;
+  font-weight: 600 !important;
+  font-size: 13px !important;
+}
+
+.gjs-sm-properties {
+  background-color: #ffffff !important;
+  padding: 16px !important;
+}
+
+.gjs-sm-property {
+  margin-bottom: 12px !important;
+}
+
+.gjs-sm-label {
+  color: var(--foreground) !important;
+  font-weight: 500 !important;
+  margin-bottom: 6px !important;
+  font-size: 12px !important;
+}
+
+/* ========================================
+   Form Fields
+   ======================================== */
+
+.gjs-field-integer input,
+.gjs-field-number input,
+.gjs-field-slider input,
+.gjs-field select,
+.gjs-field textarea,
+.gjs-field input {
+  color: var(--foreground) !important;
+  background-color: #ffffff !important;
+  border: 1.5px solid var(--border-color) !important;
+  border-radius: var(--radius-sm) !important;
+  padding: 6px 10px !important;
+  transition: all 0.2s !important;
+}
+
+.gjs-field-integer input:focus,
+.gjs-field-number input:focus,
+.gjs-field-slider input:focus,
+.gjs-field select:focus,
+.gjs-field textarea:focus,
+.gjs-field input:focus {
+  border-color: var(--primary) !important;
+  box-shadow: 0 0 0 3px var(--primary-light) !important;
+  outline: none !important;
+}
+
+.gjs-field-range input {
+  accent-color: var(--primary) !important;
+}
+
+.gjs-field-units {
+  color: var(--foreground-muted) !important;
+  background-color: var(--gray-50) !important;
+  border-radius: var(--radius-sm) !important;
+  padding: 4px 8px !important;
+  font-size: 11px !important;
+}
+
+.gjs-field-arrows {
+  background-color: var(--gray-50) !important;
+  border-radius: var(--radius-sm) !important;
+}
+
+.gjs-field-arrow {
+  color: var(--foreground) !important;
+  transition: all 0.2s !important;
+}
+
+.gjs-field-arrow:hover {
+  background-color: var(--gray-100) !important;
+}
+
+/* Color picker */
+.gjs-field-color input {
+  color: var(--foreground) !important;
+  background-color: #ffffff !important;
+  border: 1.5px solid var(--border-color) !important;
+  border-radius: var(--radius-sm) !important;
+}
+
+.gjs-field-color-picker {
+  background-color: #ffffff !important;
+  border: 1.5px solid var(--border-color) !important;
+  border-radius: var(--radius-sm) !important;
+  box-shadow: var(--shadow-lg) !important;
+}
+
+/* ========================================
+   Layer Manager
+   ======================================== */
+
+.gjs-layer {
+  background-color: #ffffff !important;
+  color: var(--foreground) !important;
+  border-bottom: 1px solid var(--border-color) !important;
+  padding: 8px 12px !important;
+  transition: all 0.2s !important;
+}
+
+.gjs-layer:hover {
   background-color: var(--gray-50) !important;
 }
 
-.gjs-frame-wrapper {
+.gjs-layer.gjs-selected {
+  background-color: var(--primary-light) !important;
+  color: var(--primary) !important;
+  border-left: 3px solid var(--primary) !important;
+}
+
+.gjs-layer-title {
+  color: var(--foreground) !important;
+  font-weight: 500 !important;
+}
+
+.gjs-layer-count {
+  background-color: var(--gray-200) !important;
+  color: var(--foreground-muted) !important;
+  border-radius: 12px !important;
+  padding: 2px 8px !important;
+  font-size: 11px !important;
+}
+
+/* ========================================
+   Toolbar & Highlights
+   ======================================== */
+
+.gjs-toolbar {
+  background-color: #ffffff !important;
+  border: 1.5px solid var(--border-color) !important;
+  border-radius: var(--radius) !important;
+  box-shadow: var(--shadow-lg) !important;
+  padding: 4px !important;
+}
+
+.gjs-toolbar-item {
+  color: var(--foreground) !important;
+  padding: 6px 10px !important;
+  border-radius: var(--radius-sm) !important;
+  transition: all 0.2s !important;
+}
+
+.gjs-toolbar-item:hover {
+  background-color: var(--primary-light) !important;
+  color: var(--primary) !important;
+}
+
+.gjs-highlighter {
+  outline: 2px solid var(--primary) !important;
+  outline-offset: 2px !important;
+}
+
+.gjs-highlighter-warning {
+  outline: 2px solid var(--error) !important;
+  outline-offset: 2px !important;
+}
+
+.gjs-selected {
+  outline: 2px solid var(--primary) !important;
+  outline-offset: 2px !important;
+}
+
+.gjs-hovered {
+  outline: 2px dashed var(--primary) !important;
+  outline-offset: 2px !important;
+}
+
+/* ========================================
+   Modal
+   ======================================== */
+
+.gjs-mdl-dialog {
+  background-color: #ffffff !important;
+  color: var(--foreground) !important;
+  border: none !important;
+  border-radius: var(--radius-lg) !important;
+  box-shadow: var(--shadow-xl) !important;
+}
+
+.gjs-mdl-header {
+  background-color: var(--gray-50) !important;
+  border-bottom: 1px solid var(--border-color) !important;
+  padding: 20px !important;
+  border-radius: var(--radius-lg) var(--radius-lg) 0 0 !important;
+}
+
+.gjs-mdl-title {
+  color: var(--foreground) !important;
+  font-weight: 600 !important;
+  font-size: 18px !important;
+}
+
+.gjs-mdl-content {
   padding: 20px !important;
 }
 
-/* Editor component styles */
+/* ========================================
+   RTE (Rich Text Editor)
+   ======================================== */
+
+.gjs-rte-toolbar {
+  background-color: #ffffff !important;
+  border: 1.5px solid var(--border-color) !important;
+  border-radius: var(--radius) !important;
+  box-shadow: var(--shadow-lg) !important;
+  padding: 4px !important;
+}
+
+.gjs-rte-actionbar,
+.gjs-rte-action {
+  color: var(--foreground) !important;
+  padding: 6px 10px !important;
+  border-radius: var(--radius-sm) !important;
+}
+
+.gjs-rte-action:hover {
+  background-color: var(--primary-light) !important;
+  color: var(--primary) !important;
+}
+
+.gjs-rte-action.gjs-rte-active {
+  background-color: var(--primary) !important;
+  color: white !important;
+}
+
+/* ========================================
+   Traits Manager
+   ======================================== */
+
+.gjs-trt-trait {
+  background-color: #ffffff !important;
+  border-bottom: 1px solid var(--border-color) !important;
+  padding: 12px 16px !important;
+}
+
+.gjs-trt-trait .gjs-label {
+  color: var(--foreground) !important;
+  font-weight: 500 !important;
+  margin-bottom: 6px !important;
+  font-size: 12px !important;
+}
+
+/* ========================================
+   Asset Manager
+   ======================================== */
+
+.gjs-am-preview-container {
+  background-color: var(--background-secondary) !important;
+  border-radius: var(--radius) !important;
+}
+
+.gjs-am-asset {
+  background-color: #ffffff !important;
+  border: 1.5px solid var(--border-color) !important;
+  border-radius: var(--radius) !important;
+  transition: all 0.2s !important;
+}
+
+.gjs-am-asset:hover {
+  border-color: var(--primary) !important;
+  box-shadow: var(--shadow-md) !important;
+}
+
+.gjs-am-asset.gjs-am-selected {
+  border-color: var(--primary) !important;
+  background-color: var(--primary-light) !important;
+}
+
+/* ========================================
+   Custom Components
+   ======================================== */
+
 .editor-component {
-  border: 1px dashed var(--gray-400);
-  min-height: 30px;
-  padding: 8px;
-  margin: 4px 0;
-  background-color: var(--background);
+  border: 1.5px dashed var(--border-color);
+  min-height: 40px;
+  padding: 12px;
+  margin: 6px 0;
+  background-color: #ffffff;
+  border-radius: var(--radius-sm);
+  transition: all 0.2s;
+}
+
+.editor-component:hover {
+  border-color: var(--primary);
+  background-color: var(--primary-light);
 }
 
 .editor-component:empty::before {
-  content: "Empty component";
-  color: var(--gray-400);
+  content: "Empty component - Drop elements here";
+  color: var(--foreground-muted);
   font-style: italic;
+  font-size: 13px;
 }
 
-/* Custom button styles */
+/* ========================================
+   Custom Buttons
+   ======================================== */
+
 .editor-btn {
-  padding: 8px 16px;
-  border-radius: 6px;
+  padding: 10px 20px;
+  border-radius: var(--radius);
   font-weight: 500;
+  font-size: 14px;
   transition: all 0.2s;
   cursor: pointer;
+  border: none;
+  box-shadow: var(--shadow-sm);
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.editor-btn:hover {
+  box-shadow: var(--shadow-md);
+  transform: translateY(-1px);
+}
+
+.editor-btn:active {
+  transform: translateY(0);
+}
+
+.editor-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
 }
 
 .editor-btn-primary {
@@ -155,312 +546,133 @@ body {
   color: white;
 }
 
-.editor-btn-primary:hover {
+.editor-btn-primary:hover:not(:disabled) {
   background-color: var(--primary-hover);
 }
 
 .editor-btn-secondary {
-  background-color: var(--gray-200);
-  color: var(--gray-700);
+  background-color: #ffffff;
+  color: var(--foreground);
+  border: 1.5px solid var(--border-color);
 }
 
-.editor-btn-secondary:hover {
-  background-color: var(--gray-300);
+.editor-btn-secondary:hover:not(:disabled) {
+  background-color: var(--gray-50);
+  border-color: var(--border-color-hover);
 }
 
-/* Panel styles */
+.editor-btn-success {
+  background-color: var(--success);
+  color: white;
+}
+
+.editor-btn-danger {
+  background-color: var(--error);
+  color: white;
+}
+
+/* ========================================
+   Panels & Cards
+   ======================================== */
+
 .editor-panel {
-  background-color: var(--background);
-  border: 1px solid var(--border-color);
-  border-radius: 8px;
-  padding: 16px;
+  background-color: #ffffff;
+  border: 1.5px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  padding: 20px;
+  box-shadow: var(--shadow);
+  transition: all 0.2s;
+}
+
+.editor-panel:hover {
+  box-shadow: var(--shadow-md);
 }
 
 .editor-panel-header {
-  border-bottom: 1px solid var(--border-color);
-  padding-bottom: 12px;
-  margin-bottom: 12px;
+  border-bottom: 1.5px solid var(--border-color);
+  padding-bottom: 16px;
+  margin-bottom: 16px;
 }
 
-/* Input styles */
-.editor-input {
+/* ========================================
+   Form Inputs
+   ======================================== */
+
+.editor-input,
+.editor-select,
+.editor-textarea {
   width: 100%;
-  padding: 8px 12px;
-  border: 1px solid var(--border-color);
-  border-radius: 6px;
-  background-color: var(--background);
+  padding: 10px 14px;
+  border: 1.5px solid var(--border-color);
+  border-radius: var(--radius);
+  background-color: #ffffff;
   color: var(--foreground);
+  font-size: 14px;
+  transition: all 0.2s;
+  box-shadow: var(--shadow-sm);
 }
 
-.editor-input:focus {
+.editor-input:hover,
+.editor-select:hover,
+.editor-textarea:hover {
+  border-color: var(--border-color-hover);
+}
+
+.editor-input:focus,
+.editor-select:focus,
+.editor-textarea:focus {
   outline: none;
   border-color: var(--primary);
-  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1);
+  box-shadow: 0 0 0 3px var(--primary-light);
 }
 
-/* Section list styles */
+.editor-input::placeholder,
+.editor-textarea::placeholder {
+  color: var(--foreground-muted);
+}
+
+/* ========================================
+   Section List
+   ======================================== */
+
 .section-list-item {
-  border: 1px solid var(--border-color);
-  border-radius: 6px;
-  padding: 12px;
-  margin-bottom: 8px;
-  background-color: var(--background);
+  border: 1.5px solid var(--border-color);
+  border-radius: var(--radius);
+  padding: 16px;
+  margin-bottom: 10px;
+  background-color: #ffffff;
   transition: all 0.2s;
+  cursor: pointer;
+  box-shadow: var(--shadow-sm);
 }
 
 .section-list-item:hover {
   border-color: var(--primary);
+  box-shadow: var(--shadow-md);
+  transform: translateX(4px);
 }
 
 .section-list-item.active {
   border-color: var(--primary);
-  background-color: rgba(59, 130, 246, 0.1);
+  background-color: var(--primary-light);
+  box-shadow: var(--shadow);
 }
 
-/* Add after your existing styles - Style Manager specific improvements */
-.gjs-sm-sector {
-  background-color: var(--background) !important;
-  color: var(--foreground) !important;
-}
+/* ========================================
+   Code Editor Panel
+   ======================================== */
 
-.gjs-sm-sector-title {
-  background-color: var(--gray-100) !important;
-  color: var(--foreground) !important;
-  border-bottom: 1px solid var(--border-color) !important;
-}
-
-.gjs-sm-properties {
-  background-color: var(--background) !important;
-  padding: 10px !important;
-}
-
-.gjs-sm-label {
-  color: var(--foreground) !important;
-}
-
-/* Field improvements */
-.gjs-field-integer input,
-.gjs-field-number input,
-.gjs-field-slider input,
-.gjs-field select,
-.gjs-field textarea {
-  color: var(--foreground) !important;
-  background-color: var(--background) !important;
-  border: 1px solid var(--border-color) !important;
-  border-radius: 4px !important;
-  padding: 4px 8px !important;
-}
-
-.gjs-field-range input {
-  background-color: var(--primary) !important;
-}
-
-.gjs-field-range input::-webkit-slider-thumb {
-  background-color: var(--primary) !important;
-}
-
-.gjs-field-range input::-moz-range-thumb {
-  background-color: var(--primary) !important;
-}
-
-/* Color picker */
-.gjs-field-color input {
-  color: var(--foreground) !important;
-  background-color: var(--background) !important;
-  border: 1px solid var(--border-color) !important;
-}
-
-.gjs-field-color-picker {
-  background-color: var(--background) !important;
-  border: 1px solid var(--border-color) !important;
-}
-
-/* Layer manager */
-.gjs-layer {
-  background-color: var(--background) !important;
-  color: var(--foreground) !important;
-  border-bottom: 1px solid var(--border-color) !important;
-}
-
-.gjs-layer.gjs-selected {
-  background-color: var(--primary) !important;
-  color: white !important;
-}
-
-.gjs-layer-title {
-  color: var(--foreground) !important;
-}
-
-/* Category */
-.gjs-block-category {
-  background-color: var(--background) !important;
-  color: var(--foreground) !important;
-  border-bottom: 1px solid var(--border-color) !important;
-}
-
-.gjs-title {
-  background-color: var(--gray-100) !important;
-  color: var(--foreground) !important;
-  border-bottom: 1px solid var(--border-color) !important;
-  padding: 8px !important;
-}
-
-/* Component highlighting */
-.gjs-highlighter {
-  outline: 2px solid var(--primary) !important;
-}
-
-.gjs-highlighter-warning {
-  outline: 2px solid var(--error) !important;
-}
-
-/* Toolbar */
-.gjs-toolbar {
-  background-color: var(--background) !important;
-  border: 1px solid var(--border-color) !important;
-}
-
-.gjs-toolbar-item {
-  color: var(--foreground) !important;
-}
-
-.gjs-toolbar-item:hover {
-  background-color: var(--gray-100) !important;
-}
-
-/* Modal */
-.gjs-mdl-dialog {
-  background-color: var(--background) !important;
-  color: var(--foreground) !important;
-  border: 1px solid var(--border-color) !important;
-}
-
-.gjs-mdl-header {
-  background-color: var(--gray-100) !important;
-  border-bottom: 1px solid var(--border-color) !important;
-}
-
-.gjs-mdl-title {
-  color: var(--foreground) !important;
-}
-
-/* Device manager */
-.gjs-devices-c {
-  background-color: var(--background) !important;
-  border-bottom: 1px solid var(--border-color) !important;
-}
-
-.gjs-device-label {
-  color: var(--foreground) !important;
-}
-
-/* RTE (Rich Text Editor) */
-.gjs-rte-toolbar {
-  background-color: var(--background) !important;
-  border: 1px solid var(--border-color) !important;
-}
-
-.gjs-rte-actionbar,
-.gjs-rte-action {
-  color: var(--foreground) !important;
-}
-
-.gjs-rte-action:hover {
-  background-color: var(--gray-100) !important;
-}
-
-/* Selected and hover states */
-.gjs-selected {
-  outline: 2px solid var(--primary) !important;
-}
-
-.gjs-hovered {
-  outline: 1px solid var(--primary) !important;
-}
-
-/* Empty state */
-.gjs-dashed *[data-gjs-type]:empty {
-  min-height: 30px !important;
-  background-color: rgba(127, 127, 127, 0.1) !important;
-}
-
-/* Units and arrows */
-.gjs-field-units {
-  color: var(--foreground) !important;
-  background-color: var(--gray-100) !important;
-}
-
-.gjs-field-arrows {
-  background-color: var(--gray-100) !important;
-}
-
-.gjs-field-arrow {
-  color: var(--foreground) !important;
-}
-
-/* Traits manager */
-.gjs-trt-trait {
-  background-color: var(--background) !important;
-  border-bottom: 1px solid var(--border-color) !important;
-}
-
-.gjs-trt-trait .gjs-label {
-  color: var(--foreground) !important;
-}
-
-/* Asset manager */
-.gjs-am-preview-container {
-  background-color: var(--background) !important;
-}
-
-.gjs-am-asset {
-  background-color: var(--gray-100) !important;
-  border: 1px solid var(--border-color) !important;
-}
-
-.gjs-am-asset.gjs-am-selected {
-  border-color: var(--primary) !important;
-}
-/* Preview mode styles */
-.gjs-preview-mode .gjs-pn-panel {
-  display: none !important;
-}
-
-.gjs-preview-mode .gjs-cv-canvas {
-  width: 100% !important;
-  height: 100% !important;
-}
-
-.gjs-preview-mode .gjs-frame-wrapper {
-  padding: 0 !important;
-}
-
-.gjs-hidden {
-  display: none !important;
-}
-
-/* Improve visibility of components */
-.gjs-dashed *[data-gjs-type="wrapper"] {
-  min-height: 50px !important;
-}
-
-.gjs-dashed *[data-gjs-type="text"] {
-  min-height: 30px !important;
-}
-
-.gjs-dashed *[data-gjs-type="default"] {
-  min-height: 30px !important;
-}
 .code-panel {
   position: fixed;
   right: 0;
   top: 64px;
-  width: 40%;
+  width: 45%;
   height: calc(100vh - 64px);
-  background-color: var(--background);
-  border-left: 1px solid var(--border-color);
+  background-color: #ffffff;
+  border-left: 2px solid var(--border-color);
   z-index: 999;
-  transition: transform 0.3s ease;
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: var(--shadow-xl);
 }
 
 .code-panel.hidden {
@@ -471,56 +683,59 @@ body {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 1rem;
-  border-bottom: 1px solid var(--border-color);
+  padding: 16px 20px;
+  background-color: var(--gray-50);
+  border-bottom: 1.5px solid var(--border-color);
 }
 
 .code-panel-content {
-  height: calc(100% - 56px);
+  height: calc(100% - 65px);
   overflow: auto;
+  background-color: #fafbfc;
 }
 
 .code-panel-tab {
-  padding: 0.5rem 1rem;
+  padding: 8px 16px;
   cursor: pointer;
   border: none;
   background: none;
+  color: var(--foreground-muted);
+  font-weight: 500;
+  font-size: 13px;
+  border-radius: var(--radius);
+  transition: all 0.2s;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.code-panel-tab:hover {
+  background-color: var(--gray-100);
   color: var(--foreground);
 }
 
 .code-panel-tab.active {
   color: var(--primary);
-  border-bottom: 2px solid var(--primary);
+  background-color: var(--primary-light);
 }
 
 .code-panel-editor {
-  padding: 1rem;
+  padding: 0;
+  height: 100%;
 }
 
-.code-panel-editor textarea {
-  width: 100%;
-  height: 100%;
-  min-height: 300px;
-  font-family: monospace;
-  background: var(--background);
-  color: var(--foreground);
-  border: 1px solid var(--border-color);
-  padding: 1rem;
-  resize: vertical;
-}
-/* Enhanced code editor styles */
+.code-panel-editor textarea,
 .code-editor-textarea {
   width: 100%;
   height: 100%;
-  min-height: 300px;
-  font-family: "Fira Code", monospace;
-  font-size: 14px;
-  line-height: 1.5;
-  background: var(--background);
+  min-height: 400px;
+  font-family: "Fira Code", "Consolas", "Monaco", monospace;
+  font-size: 13px;
+  line-height: 1.6;
+  background: #ffffff;
   color: var(--foreground);
-  border: 1px solid var(--border-color);
-  padding: 1rem;
-  resize: vertical;
+  border: none;
+  padding: 20px;
+  resize: none;
   tab-size: 2;
   -moz-tab-size: 2;
   white-space: pre;
@@ -528,35 +743,131 @@ body {
   overflow-x: auto;
 }
 
+.code-panel-editor textarea:focus,
 .code-editor-textarea:focus {
   outline: none;
-  border-color: var(--primary);
-  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1);
 }
 
-.code-panel-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 0.75rem;
-  background-color: var(--gray-50);
-  border-bottom: 1px solid var(--border-color);
+/* ========================================
+   Preview Mode
+   ======================================== */
+
+.gjs-preview-mode .gjs-pn-panel {
+  display: none !important;
 }
 
-.code-panel-tab {
-  padding: 0.5rem 1rem;
-  font-size: 0.875rem;
-  font-weight: 500;
-  color: var(--gray-600);
-  border-radius: 0.375rem;
-  transition: all 0.2s;
+.gjs-preview-mode .gjs-cv-canvas {
+  width: 100% !important;
+  height: 100% !important;
+  background-image: none !important;
 }
 
-.code-panel-tab:hover {
-  background-color: var(--gray-100);
+.gjs-preview-mode .gjs-frame-wrapper {
+  padding: 0 !important;
+  box-shadow: none !important;
+  border-radius: 0 !important;
 }
 
-.code-panel-tab.active {
-  color: var(--primary);
-  background-color: var(--gray-100);
+.gjs-hidden {
+  display: none !important;
+}
+
+/* ========================================
+   Empty States & Helpers
+   ======================================== */
+
+.gjs-dashed *[data-gjs-type="wrapper"] {
+  min-height: 100px !important;
+  border: 2px dashed var(--border-color) !important;
+  border-radius: var(--radius) !important;
+}
+
+.gjs-dashed *[data-gjs-type="text"] {
+  min-height: 40px !important;
+}
+
+.gjs-dashed *[data-gjs-type="default"] {
+  min-height: 40px !important;
+}
+
+.gjs-dashed *[data-gjs-type]:empty {
+  min-height: 50px !important;
+  background-color: var(--gray-50) !important;
+  border: 2px dashed var(--border-color) !important;
+  border-radius: var(--radius-sm) !important;
+}
+
+/* ========================================
+   Scrollbars
+   ======================================== */
+
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: #fafbfc;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--gray-300);
+  border-radius: 5px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--gray-400);
+}
+
+/* ========================================
+   Animations
+   ======================================== */
+
+@keyframes slideInRight {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.animate-slide-in {
+  animation: slideInRight 0.3s ease-out;
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.2s ease-out;
+}
+
+/* ========================================
+   Utility Classes
+   ======================================== */
+
+.text-muted {
+  color: var(--foreground-muted);
+}
+
+.bg-card {
+  background-color: #ffffff;
+  border: 1.5px solid var(--border-color);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-sm);
+}
+
+.divider {
+  height: 1px;
+  background-color: var(--border-color);
+  margin: 16px 0;
 }

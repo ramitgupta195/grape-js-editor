@@ -9,9 +9,6 @@ import {
 } from "react";
 import grapesjs from "grapesjs";
 import "grapesjs/dist/css/grapes.min.css";
-import prettier from "prettier/standalone";
-import parserHTML from "prettier/parser-html";
-import parserCSS from "prettier/parser-postcss";
 
 // Block Categories and Components
 const BLOCK_CATEGORIES = {
@@ -137,7 +134,6 @@ const BLOCK_COMPONENTS = {
 
 // Helper function to merge CSS
 const mergeCss = (existingCss, newCss) => {
-  // Remove duplicate CSS rules
   const cssRules = {};
 
   // Parse existing CSS
@@ -158,7 +154,6 @@ const mergeCss = (existingCss, newCss) => {
     }
   });
 
-  // Combine all unique rules
   return Object.values(cssRules).join("\n");
 };
 
@@ -194,7 +189,6 @@ const GrapesEditor = forwardRef(
         const blockManager = editorInstance.current.BlockManager;
 
         sections.forEach((section) => {
-          // Remove existing block if it exists
           blockManager.remove(`section-${section.id}`);
 
           blockManager.add(`section-${section.id}`, {
@@ -216,13 +210,13 @@ const GrapesEditor = forwardRef(
               return `
                 <div class="${className}" style="position: relative;">
                   <div style="padding: 8px">
-                    <h4 style="margin: 0 0 4px; font-size: 14px">${section.name}</h4>
-                    <p style="margin: 0; font-size: 12px">Component Key: ${section.component_key}</p>
+                    <h4 style="margin: 0 0 4px; font-size: 14px; font-weight: 600;">${section.name}</h4>
+                    <p style="margin: 0; font-size: 11px; color: #64748b;">${section.component_key}</p>
                   </div>
                   ${
                     section.thumbnail_url
                       ? `<img src="${section.thumbnail_url}" style="width: 100%; height: 100px; object-fit: cover; border-radius: 4px"/>`
-                      : '<div style="width: 100%; height: 100px; background: #f0f0f0; border-radius: 4px; display: flex; align-items: center; justify-content: center;">No Preview</div>'
+                      : '<div style="width: 100%; height: 100px; background: #f1f5f9; border-radius: 4px; display: flex; align-items: center; justify-content: center; color: #94a3b8; font-size: 12px;">No Preview</div>'
                   }
                 </div>
               `;
@@ -233,6 +227,7 @@ const GrapesEditor = forwardRef(
         console.error("Error loading sections as blocks:", error);
       }
     };
+
     // Code beautification function
     const beautifyCode = (code, type) => {
       try {
@@ -349,7 +344,7 @@ const GrapesEditor = forwardRef(
       navigator.clipboard
         .writeText(currentCode)
         .then(() => {
-          console.log("Code copied to clipboard");
+          alert("Code copied to clipboard!");
         })
         .catch((err) => console.error("Failed to copy code:", err));
     };
@@ -373,6 +368,7 @@ const GrapesEditor = forwardRef(
       }
       setIsCodeEditorOpen(!isCodeEditorOpen);
     };
+
     const handleSave = () => {
       if (!editorInstance.current) return;
 
@@ -381,7 +377,6 @@ const GrapesEditor = forwardRef(
         keepUnusedStyles: true,
       });
 
-      console.log("Saving...", { html, css });
       if (onSave) {
         onSave({
           template_html: html,
@@ -515,14 +510,41 @@ const GrapesEditor = forwardRef(
               },
               ...Object.values(BLOCK_COMPONENTS),
             ],
-            categories: [{ id: "Saved Sections", label: "Saved Sections" }],
+            categories: [
+              { id: "Saved Sections", label: "Saved Sections", open: false },
+              {
+                id: BLOCK_CATEGORIES.LAYOUT,
+                label: BLOCK_CATEGORIES.LAYOUT,
+                open: false,
+              },
+              {
+                id: BLOCK_CATEGORIES.BASIC,
+                label: BLOCK_CATEGORIES.BASIC,
+                open: false,
+              },
+              {
+                id: BLOCK_CATEGORIES.COMPONENTS,
+                label: BLOCK_CATEGORIES.COMPONENTS,
+                open: false,
+              },
+              {
+                id: BLOCK_CATEGORIES.TYPOGRAPHY,
+                label: BLOCK_CATEGORIES.TYPOGRAPHY,
+                open: false,
+              },
+              {
+                id: BLOCK_CATEGORIES.MEDIA,
+                label: BLOCK_CATEGORIES.MEDIA,
+                open: false,
+              },
+            ],
           },
           styleManager: {
             appendTo: "#styles",
             sectors: [
               {
                 name: "Dimension",
-                open: true,
+                open: false, // Changed to false
                 buildProps: [
                   "width",
                   "height",
@@ -555,7 +577,7 @@ const GrapesEditor = forwardRef(
               },
               {
                 name: "Typography",
-                open: true,
+                open: false, // Changed to false
                 buildProps: [
                   "font-family",
                   "font-size",
@@ -569,7 +591,7 @@ const GrapesEditor = forwardRef(
               },
               {
                 name: "Decorations",
-                open: true,
+                open: false, // Changed to false
                 buildProps: [
                   "background-color",
                   "border-radius",
@@ -580,7 +602,7 @@ const GrapesEditor = forwardRef(
               },
               {
                 name: "Extra",
-                open: true,
+                open: false, // Changed to false
                 buildProps: ["transition", "transform"],
               },
             ],
@@ -588,6 +610,7 @@ const GrapesEditor = forwardRef(
           },
           layerManager: {
             appendTo: "#layers",
+            showWrapper: false, // Hide wrapper by default
           },
           panels: {
             defaults: [
@@ -703,6 +726,7 @@ const GrapesEditor = forwardRef(
           setIsDirty(true);
           updateCodeEditor();
         });
+
         // Add commands
         editor.Commands.add("preview", {
           run: togglePreview,
@@ -775,91 +799,122 @@ const GrapesEditor = forwardRef(
     }, [sectionId, apiEndpoint]);
 
     return (
-      <div className="h-full flex flex-col">
+      <div className="h-full flex flex-col bg-white">
         {/* Top Toolbar */}
-        <div className="bg-gray-800 text-white p-4 flex justify-between items-center">
-          <div className="flex items-center space-x-4">
+        <div className="bg-white border-b border-gray-200 px-6 py-3 flex justify-between items-center shadow-sm">
+          <div className="flex items-center space-x-3">
             <select
               onChange={(e) =>
                 editorInstance.current?.setDevice(e.target.value)
               }
-              className="editor-select"
+              className="px-4 py-2 border border-gray-300 rounded-lg bg-white text-gray-700 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
             >
-              <option value="">Desktop</option>
-              <option value="tablet">Tablet</option>
-              <option value="mobile">Mobile</option>
+              <option value="">🖥️ Desktop</option>
+              <option value="tablet">📱 Tablet</option>
+              <option value="mobile">📱 Mobile</option>
             </select>
+            <div className="h-6 w-px bg-gray-300"></div>
             <button
               onClick={togglePreview}
-              className={`editor-btn ${isPreview ? "editor-btn-primary" : "editor-btn-secondary"}`}
+              className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                isPreview
+                  ? "bg-blue-500 text-white hover:bg-blue-600"
+                  : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+              }`}
             >
-              {isPreview ? "Exit Preview" : "Preview"}
+              {isPreview ? "✏️ Edit" : "👁️ Preview"}
             </button>
             <button
               onClick={() =>
                 editorInstance.current?.runCommand("sw-visibility")
               }
-              className="editor-btn editor-btn-secondary"
+              className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-200 transition-all"
             >
-              Borders
+              🔲 Borders
             </button>
             <button
               onClick={toggleCodeEditor}
-              className={`editor-btn ${isCodeEditorOpen ? "editor-btn-primary" : "editor-btn-secondary"}`}
+              className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                isCodeEditorOpen
+                  ? "bg-blue-500 text-white hover:bg-blue-600"
+                  : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+              }`}
             >
-              Code
+              💻 Code
             </button>
             <button
               onClick={loadSectionsAsBlocks}
-              className="editor-btn editor-btn-secondary"
+              className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-200 transition-all"
             >
-              Refresh Sections
+              🔄 Refresh
             </button>
           </div>
           <button
             onClick={handleSave}
             disabled={!isDirty}
-            className={`editor-btn ${isDirty ? "editor-btn-primary" : "editor-btn-secondary"}`}
+            className={`px-6 py-2 rounded-lg text-sm font-medium transition-all shadow-sm ${
+              isDirty
+                ? "bg-blue-500 text-white hover:bg-blue-600 hover:shadow-md"
+                : "bg-gray-100 text-gray-400 cursor-not-allowed"
+            }`}
           >
-            {isDirty ? "Save Changes" : "Saved"}
+            {isDirty ? "💾 Save Changes" : "✓ Saved"}
           </button>
         </div>
 
         {/* Main Editor Area */}
-        <div className="flex-1 flex">
+        <div className="flex-1 flex overflow-hidden">
           {/* Loading overlay */}
           {loading && (
             <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-              <div className="bg-white p-4 rounded-lg">Loading...</div>
+              <div className="bg-white p-6 rounded-lg shadow-xl">
+                <div className="flex items-center space-x-3">
+                  <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-blue-500"></div>
+                  <span className="text-gray-700 font-medium">Loading...</span>
+                </div>
+              </div>
             </div>
           )}
+
           {/* Left Sidebar */}
           <div
-            className={`w-64 bg-background border-r border-border flex flex-col ${isPreview ? "hidden" : ""}`}
+            className={`w-72 bg-white border-r border-gray-200 flex flex-col ${
+              isPreview ? "hidden" : ""
+            }`}
           >
-            <div className="p-4 border-b border-border">
-              <h2 className="font-semibold text-lg">Blocks</h2>
+            {/* Blocks Section */}
+            <div className="border-b border-gray-200 bg-gray-50 px-4 py-3">
+              <h2 className="font-semibold text-sm text-gray-700 uppercase tracking-wide">
+                📦 Blocks
+              </h2>
             </div>
-            <div className="flex-1 overflow-y-auto" id="blocks" />
+            <div className="flex-1 overflow-y-auto p-3" id="blocks" />
 
-            <div className="p-4 border-t border-border">
-              <h2 className="font-semibold text-lg">Layers</h2>
+            {/* Layers Section */}
+            <div className="border-t border-gray-200 bg-gray-50 px-4 py-3">
+              <h2 className="font-semibold text-sm text-gray-700 uppercase tracking-wide">
+                🗂️ Layers
+              </h2>
             </div>
             <div className="h-64 overflow-y-auto" id="layers" />
           </div>
 
           {/* Editor Canvas */}
           <div
-            className={`flex-1 bg-gray-50 ${isPreview ? "w-full" : ""}`}
+            className={`flex-1 bg-gray-100 ${isPreview ? "w-full" : ""}`}
             id="gjs"
           />
 
-          {/* Right Sidebar */}
+          {/* Right Sidebar - Styles */}
           <div
-            className={`w-64 bg-background border-l border-border ${isPreview ? "hidden" : ""}`}
+            className={`w-72 bg-white border-l border-gray-200 ${
+              isPreview ? "hidden" : ""
+            }`}
           >
-            <div className="p-4 border-b border-border">
-              <h2 className="font-semibold text-lg">Styles</h2>
+            <div className="border-b border-gray-200 bg-gray-50 px-4 py-3">
+              <h2 className="font-semibold text-sm text-gray-700 uppercase tracking-wide">
+                🎨 Styles
+              </h2>
             </div>
             <div className="overflow-y-auto h-full" id="styles" />
           </div>
@@ -868,15 +923,19 @@ const GrapesEditor = forwardRef(
         {/* Code Editor Panel */}
         <div className={`code-panel ${isCodeEditorOpen ? "" : "hidden"}`}>
           <div className="code-panel-header">
-            <div>
+            <div className="flex space-x-2">
               <button
-                className={`code-panel-tab ${activeTab === "html" ? "active" : ""}`}
+                className={`code-panel-tab ${
+                  activeTab === "html" ? "active" : ""
+                }`}
                 onClick={() => setActiveTab("html")}
               >
                 HTML
               </button>
               <button
-                className={`code-panel-tab ${activeTab === "css" ? "active" : ""}`}
+                className={`code-panel-tab ${
+                  activeTab === "css" ? "active" : ""
+                }`}
                 onClick={() => setActiveTab("css")}
               >
                 CSS
@@ -885,31 +944,31 @@ const GrapesEditor = forwardRef(
             <div className="flex items-center space-x-2">
               <button
                 onClick={handleBeautifyCode}
-                className="editor-btn editor-btn-secondary text-sm"
+                className="px-3 py-1.5 bg-gray-100 text-gray-700 rounded text-xs font-medium hover:bg-gray-200 transition-all"
                 title="Beautify Code"
               >
-                Format
+                ✨ Format
               </button>
               <button
                 onClick={handleCopyCode}
-                className="editor-btn editor-btn-secondary text-sm"
+                className="px-3 py-1.5 bg-gray-100 text-gray-700 rounded text-xs font-medium hover:bg-gray-200 transition-all"
                 title="Copy Code"
               >
-                Copy
+                📋 Copy
               </button>
               <button
                 onClick={handleDownloadCode}
-                className="editor-btn editor-btn-secondary text-sm"
+                className="px-3 py-1.5 bg-gray-100 text-gray-700 rounded text-xs font-medium hover:bg-gray-200 transition-all"
                 title="Download Code"
               >
-                Download
+                💾 Download
               </button>
               <button
                 onClick={toggleCodeEditor}
-                className="editor-btn editor-btn-secondary text-sm"
+                className="px-3 py-1.5 bg-red-100 text-red-700 rounded text-xs font-medium hover:bg-red-200 transition-all"
                 title="Close"
               >
-                Close
+                ✕ Close
               </button>
             </div>
           </div>
@@ -922,6 +981,7 @@ const GrapesEditor = forwardRef(
                   placeholder="HTML code..."
                   spellCheck="false"
                   wrap="off"
+                  className="w-full h-full font-mono text-sm"
                 />
               )}
               {activeTab === "css" && (
@@ -931,6 +991,7 @@ const GrapesEditor = forwardRef(
                   placeholder="CSS code..."
                   spellCheck="false"
                   wrap="off"
+                  className="w-full h-full font-mono text-sm"
                 />
               )}
             </div>

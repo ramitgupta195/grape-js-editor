@@ -21,9 +21,9 @@ import {
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 
-// ... (keep all the component functions: DraggableSection, SortableSection, DroppableArea - same as before)
-
-// Draggable Section from Sidebar
+// ============================================
+// DRAGGABLE SECTION (FROM SIDEBAR)
+// ============================================
 function DraggableSection({ section }) {
   const { attributes, listeners, setNodeRef, transform, isDragging } =
     useDraggable({
@@ -90,6 +90,9 @@ function DraggableSection({ section }) {
   );
 }
 
+// ============================================
+// SORTABLE SECTION (IN CANVAS)
+// ============================================
 function SortableSection({ section, onRemove, viewMode = "compact" }) {
   const {
     attributes,
@@ -299,6 +302,9 @@ function SortableSection({ section, onRemove, viewMode = "compact" }) {
   );
 }
 
+// ============================================
+// DROPPABLE AREA
+// ============================================
 function DroppableArea({ children }) {
   const { setNodeRef } = useDroppable({
     id: "droppable-area",
@@ -311,8 +317,11 @@ function DroppableArea({ children }) {
   );
 }
 
-// Main Page Builder Component
+// ============================================
+// MAIN PAGE BUILDER COMPONENT
+// ============================================
 export default function PageBuilder() {
+  // State
   const [availableSections, setAvailableSections] = useState([]);
   const [existingPages, setExistingPages] = useState([]);
   const [pageSections, setPageSections] = useState([]);
@@ -333,8 +342,10 @@ export default function PageBuilder() {
   const [searchTerm, setSearchTerm] = useState("");
   const [combinedCSS, setCombinedCSS] = useState("");
 
+  // API Endpoints
   const sectionsApiEndpoint = "http://10.80.5.76:3000/api/v1/sections";
   const pagesApiEndpoint = "http://10.80.5.76:3000/api/v1/pages";
+  const pageSectionsApiEndpoint = "http://10.80.5.76:3000/api/v1/page_sections";
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -347,11 +358,13 @@ export default function PageBuilder() {
     })
   );
 
+  // Initial load
   useEffect(() => {
     fetchSections();
     fetchPages();
   }, []);
 
+  // Update combined CSS
   useEffect(() => {
     const css = pageSections
       .map((section) => section.template_css || "")
@@ -360,14 +373,23 @@ export default function PageBuilder() {
     setCombinedCSS(css);
   }, [pageSections]);
 
+  // ============================================
+  // API CALLS
+  // ============================================
+
   const fetchSections = async () => {
     setLoading(true);
     try {
       const response = await fetch(sectionsApiEndpoint);
+      if (!response.ok)
+        throw new Error(`Failed to fetch sections: ${response.status}`);
+
       const data = await response.json();
+      console.log("✅ Fetched sections:", data);
       setAvailableSections(data);
     } catch (error) {
-      console.error("Error fetching sections:", error);
+      console.error("❌ Error fetching sections:", error);
+      alert(`Failed to load sections: ${error.message}`);
     } finally {
       setLoading(false);
     }
@@ -376,47 +398,82 @@ export default function PageBuilder() {
   const fetchPages = async () => {
     try {
       const response = await fetch(pagesApiEndpoint);
+      if (!response.ok)
+        throw new Error(`Failed to fetch pages: ${response.status}`);
+
       const data = await response.json();
+      console.log("✅ Fetched pages:", data);
       setExistingPages(data);
     } catch (error) {
-      console.error("Error fetching pages:", error);
+      console.error("❌ Error fetching pages:", error);
     }
   };
 
-  // UPDATED: Load page with full section details
+  // ============================================
+  // LOAD PAGE (Complete Flow)
+  // ============================================
   const loadPage = async (id) => {
     setLoadingPage(true);
-    try {
-      // Fetch the page data
-      const response = await fetch(`${pagesApiEndpoint}/${id}`);
-      const pageData = await response.json();
+    console.log(`🔄 Loading page with ID: ${id}`);
 
-      // Set page metadata
+    try {
+      const pageResponse = await fetch(`${pagesApiEndpoint}/${id}`);
+      if (!pageResponse.ok) {
+        throw new Error(`Failed to load page: ${pageResponse.status}`);
+      }
+
+      const pageData = await pageResponse.json();
+      console.log("✅ Page metadata loaded:", pageData);
+
       setPageId(pageData.id);
       setPageTitle(pageData.title || "");
       setPageSlug(pageData.slug || "");
       setPageMetaDescription(pageData.meta_description || "");
 
-      // Load sections with full details
-      if (pageData.sections && pageData.sections.length > 0) {
-        // Fetch each section's full details
+      const pageSectionsResponse = await fetch(pageSectionsApiEndpoint);
+      if (!pageSectionsResponse.ok) {
+        throw new Error(
+          `Failed to load page sections: ${pageSectionsResponse.status}`
+        );
+      }
+
+      const allPageSections = await pageSectionsResponse.json();
+      console.log("✅ All page_sections loaded:", allPageSections);
+
+      const pageSpecificSections = allPageSections.filter(
+        (ps) => ps.page_id === id
+      );
+      console.log(
+        `✅ Filtered page_sections for page ${id}:`,
+        pageSpecificSections
+      );
+
+      if (pageSpecificSections.length > 0) {
         const sectionsWithDetails = await Promise.all(
-          pageData.sections.map(async (pageSection) => {
+          pageSpecificSections.map(async (pageSection) => {
             try {
-              // Fetch full section data
               const sectionResponse = await fetch(
-                `${sectionsApiEndpoint}/${pageSection.section_id || pageSection.id}`
+                `${sectionsApiEndpoint}/${pageSection.section_id}`
               );
+
+              if (!sectionResponse.ok) {
+                console.error(
+                  `Failed to load section ${pageSection.section_id}`
+                );
+                return null;
+              }
+
               const fullSectionData = await sectionResponse.json();
 
               return {
                 ...fullSectionData,
                 pageOrderId: `page-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-                position: pageSection.position || 0,
+                sort_order: pageSection.sort_order,
+                page_section_id: pageSection.id,
               };
             } catch (error) {
               console.error(
-                `Error loading section ${pageSection.section_id || pageSection.id}:`,
+                `Error loading section ${pageSection.section_id}:`,
                 error
               );
               return null;
@@ -424,11 +481,11 @@ export default function PageBuilder() {
           })
         );
 
-        // Filter out null values and sort by position
         const validSections = sectionsWithDetails
           .filter((section) => section !== null)
-          .sort((a, b) => (a.position || 0) - (b.position || 0));
+          .sort((a, b) => (a.sort_order || 0) - (b.sort_order || 0));
 
+        console.log("✅ Final sections loaded:", validSections);
         setPageSections(validSections);
       } else {
         setPageSections([]);
@@ -436,33 +493,235 @@ export default function PageBuilder() {
 
       setShowPagesList(false);
     } catch (error) {
-      console.error("Error loading page:", error);
-      alert("Failed to load page. Please try again.");
+      console.error("❌ Error loading page:", error);
+      alert(`Failed to load page: ${error.message}`);
     } finally {
       setLoadingPage(false);
     }
   };
 
+  // ============================================
+  // DELETE PAGE (Complete Flow)
+  // ============================================
   const deletePage = async (id) => {
     if (!confirm("Are you sure you want to delete this page?")) {
       return;
     }
 
     try {
+      const pageSectionsResponse = await fetch(pageSectionsApiEndpoint);
+      const allPageSections = await pageSectionsResponse.json();
+      const pageSpecificSections = allPageSections.filter(
+        (ps) => ps.page_id === id
+      );
+
+      for (const pageSection of pageSpecificSections) {
+        await fetch(`${pageSectionsApiEndpoint}/${pageSection.id}`, {
+          method: "DELETE",
+        });
+      }
+
       const response = await fetch(`${pagesApiEndpoint}/${id}`, {
         method: "DELETE",
       });
 
       if (response.ok) {
+        alert("Page deleted successfully!");
         fetchPages();
         if (pageId === id) {
           handleNewPage();
         }
       }
     } catch (error) {
-      console.error("Error deleting page:", error);
+      console.error("❌ Error deleting page:", error);
+      alert(`Failed to delete page: ${error.message}`);
     }
   };
+
+  // ============================================
+  // SAVE PAGE - WITH BACKEND WORKAROUND
+  // ============================================
+  const handleSavePage = async () => {
+    if (!pageTitle || !pageSlug) {
+      alert("Please enter page title and slug");
+      return;
+    }
+
+    if (pageSections.length === 0) {
+      alert("Please add at least one section to the page");
+      return;
+    }
+
+    setSaving(true);
+
+    try {
+      let currentPageId = pageId;
+
+      // STEP 1: CREATE OR UPDATE PAGE
+      const pageData = {
+        page: {
+          title: pageTitle,
+          slug: pageSlug,
+          meta_description: pageMetaDescription,
+        },
+      };
+
+      console.log(`📄 Step 1: ${pageId ? "Updating" : "Creating"} page`);
+
+      if (pageId) {
+        const pageResponse = await fetch(`${pagesApiEndpoint}/${pageId}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(pageData),
+        });
+
+        if (!pageResponse.ok) {
+          throw new Error(`Failed to update page: ${pageResponse.status}`);
+        }
+
+        console.log("✅ Page updated");
+      } else {
+        const pageResponse = await fetch(pagesApiEndpoint, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(pageData),
+        });
+
+        if (!pageResponse.ok) {
+          throw new Error(`Failed to create page: ${pageResponse.status}`);
+        }
+
+        const savedPage = await pageResponse.json();
+        currentPageId = savedPage.id;
+        setPageId(currentPageId);
+        console.log("✅ Page created with ID:", currentPageId);
+      }
+
+      // STEP 2: DELETE OLD PAGE_SECTIONS (IF UPDATING)
+      if (pageId) {
+        console.log(`📄 Step 2: Deleting old page_sections`);
+
+        const existingPageSectionsResponse = await fetch(
+          pageSectionsApiEndpoint
+        );
+        const allPageSections = await existingPageSectionsResponse.json();
+        const existingPageSections = allPageSections.filter(
+          (ps) => ps.page_id === pageId
+        );
+
+        for (const pageSection of existingPageSections) {
+          await fetch(`${pageSectionsApiEndpoint}/${pageSection.id}`, {
+            method: "DELETE",
+          });
+        }
+
+        console.log("✅ Old page_sections deleted");
+      }
+
+      // STEP 3: CREATE NEW PAGE_SECTIONS (WITH WORKAROUND)
+      console.log(
+        `📄 Step 3: Creating ${pageSections.length} new page_sections`
+      );
+
+      let successCount = 0;
+
+      for (let i = 0; i < pageSections.length; i++) {
+        const section = pageSections[i];
+        const pageSectionData = {
+          page_section: {
+            page_id: currentPageId,
+            section_id: section.id,
+            sort_order: i + 1,
+          },
+        };
+
+        console.log(
+          `  → Creating page_section ${i + 1}/${pageSections.length}`
+        );
+
+        try {
+          const createResponse = await fetch(pageSectionsApiEndpoint, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(pageSectionData),
+          });
+
+          console.log(`    Response status: ${createResponse.status}`);
+
+          // ⚠️ WORKAROUND: Backend returns 500 but record is created
+          if (createResponse.status === 500) {
+            const errorText = await createResponse.text();
+
+            // Check if it's the known backend routing error
+            if (errorText.includes("page_section_url")) {
+              console.warn(
+                "    ⚠️ Backend error (page_section_url) - verifying if record was created..."
+              );
+
+              // Wait for DB
+              await new Promise((resolve) => setTimeout(resolve, 300));
+
+              // Verify if the page_section was actually created
+              const verifyResponse = await fetch(pageSectionsApiEndpoint);
+              const allPageSections = await verifyResponse.json();
+              const justCreated = allPageSections.find(
+                (ps) =>
+                  ps.page_id === currentPageId &&
+                  ps.section_id === section.id &&
+                  ps.sort_order === i + 1
+              );
+
+              if (justCreated) {
+                console.log("    ✅ Verified: Record created despite error");
+                successCount++;
+                continue;
+              } else {
+                console.error("    ❌ Record NOT created");
+                throw new Error(
+                  "Failed to create page_section (not found in database)"
+                );
+              }
+            }
+          }
+
+          if (createResponse.ok) {
+            console.log("    ✅ Created successfully");
+            successCount++;
+          } else {
+            const errorText = await createResponse.text();
+            throw new Error(`Failed: ${createResponse.status} - ${errorText}`);
+          }
+        } catch (error) {
+          console.error(`    ❌ Error:`, error);
+          throw error;
+        }
+      }
+
+      console.log(
+        `✅ Created ${successCount}/${pageSections.length} page_sections`
+      );
+
+      if (successCount === pageSections.length) {
+        alert(`✅ Page ${pageId ? "updated" : "created"} successfully!`);
+        fetchPages();
+      } else {
+        throw new Error(
+          `Only ${successCount} of ${pageSections.length} sections were saved`
+        );
+      }
+    } catch (error) {
+      console.error("❌ Error saving page:", error);
+      alert(
+        `Failed to save page: ${error.message}\n\nCheck console for details.`
+      );
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  // ============================================
+  // UI HANDLERS
+  // ============================================
 
   const handleNewPage = () => {
     setPageId(null);
@@ -538,63 +797,6 @@ export default function PageBuilder() {
     );
   };
 
-  const handleSavePage = async () => {
-    if (!pageTitle || !pageSlug) {
-      alert("Please enter page title and slug");
-      return;
-    }
-
-    if (pageSections.length === 0) {
-      alert("Please add at least one section to the page");
-      return;
-    }
-
-    setSaving(true);
-    try {
-      const pageData = {
-        page: {
-          title: pageTitle,
-          slug: pageSlug,
-          meta_description: pageMetaDescription,
-          sections_attributes: pageSections.map((s, index) => ({
-            section_id: s.id,
-            position: index + 1,
-          })),
-          combined_html: pageSections.map((s) => s.template_html).join("\n"),
-          combined_css: combinedCSS,
-        },
-      };
-
-      const method = pageId ? "PUT" : "POST";
-      const url = pageId ? `${pagesApiEndpoint}/${pageId}` : pagesApiEndpoint;
-
-      const response = await fetch(url, {
-        method: method,
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(pageData),
-      });
-
-      if (response.ok) {
-        const result = await response.json();
-        if (!pageId && result.id) {
-          setPageId(result.id);
-        }
-        alert(`Page ${pageId ? "updated" : "created"} successfully!`);
-        fetchPages();
-      } else {
-        const error = await response.text();
-        alert(`Failed to save page: ${error}`);
-      }
-    } catch (error) {
-      console.error("Error saving page:", error);
-      alert("Failed to save page. Please try again.");
-    } finally {
-      setSaving(false);
-    }
-  };
-
   const filteredSections = availableSections.filter(
     (section) =>
       section.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -620,6 +822,10 @@ export default function PageBuilder() {
       : pageSections.find((s) => s.pageOrderId === activeId)
     : null;
 
+  // ============================================
+  // RENDER
+  // ============================================
+
   return (
     <DndContext
       sensors={sensors}
@@ -628,7 +834,7 @@ export default function PageBuilder() {
       onDragEnd={handleDragEnd}
     >
       <div className="flex h-screen bg-gray-50">
-        {/* Loading Overlay for Page Load */}
+        {/* Loading Overlay */}
         {loadingPage && (
           <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50">
             <div className="bg-white rounded-2xl shadow-2xl p-8 flex flex-col items-center">
@@ -723,9 +929,6 @@ export default function PageBuilder() {
           </div>
         )}
 
-        {/* Rest of the component stays the same - Sidebar, Main Content, etc. */}
-        {/* ... (copy the rest from the previous version) ... */}
-
         {/* Sidebar */}
         <div
           className={`${collapsedSidebar ? "w-16" : "w-96"} bg-white border-r border-gray-200 flex flex-col transition-all duration-300 ${previewMode ? "hidden" : ""}`}
@@ -807,7 +1010,7 @@ export default function PageBuilder() {
                 <div className="mt-6 space-y-4">
                   <div>
                     <label className="block text-xs font-semibold text-gray-700 uppercase tracking-wide mb-2">
-                      Page Title
+                      Page Title *
                     </label>
                     <input
                       type="text"
@@ -820,7 +1023,7 @@ export default function PageBuilder() {
 
                   <div>
                     <label className="block text-xs font-semibold text-gray-700 uppercase tracking-wide mb-2">
-                      URL Slug
+                      URL Slug *
                     </label>
                     <input
                       type="text"
@@ -936,11 +1139,6 @@ export default function PageBuilder() {
                           )
                         }
                         className="px-3 py-2 bg-gray-100 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-200 transition-colors flex items-center gap-1"
-                        title={
-                          canvasViewMode === "compact"
-                            ? "Switch to Full View"
-                            : "Switch to Compact View"
-                        }
                       >
                         <svg
                           className="w-4 h-4"
